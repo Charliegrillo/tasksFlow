@@ -1,0 +1,5 @@
+import { NextResponse } from 'next/server'
+import { deleteClient, updateClient } from '@/lib/db'
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) { const { id } = await params; const data = updateClient(Number(id), await request.json()); return data ? NextResponse.json({ data }) : NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 }) }
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) { const { id } = await params; if (!deleteClient(Number(id))) return NextResponse.json({ error: 'No se puede eliminar el último cliente' }, { status: 409 }); return new NextResponse(null, { status: 204 }) }

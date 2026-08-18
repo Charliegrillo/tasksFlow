@@ -1,0 +1,543 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ExternalLink, LayoutGrid, List, MoreHorizontal, Paperclip, Plus, Search, SlidersHorizontal, Trash2, X, DollarSign, Archive, GripVertical, MoveHorizontal } from 'lucide-react'
+import type { Attachment, Board, BoardList, Client, Contact, CrmDeal, CrmInteraction, CrmStage, Milestone, Space, Task, TaskPriority, TaskStatus } from '@/lib/db'
+import { ClientDialog } from '@/components/client-dialog'
+import { SpaceDialog } from '@/components/space-dialog'
+import { BoardDialog } from '@/components/board-dialog'
+import { MilestoneDialog } from '@/components/milestone-dialog'
+import { Sidebar } from '@/components/sidebar'
+import { BudgetPanel } from '@/components/budget-panel'
+import { ConfirmDialog } from '@/components/confirm-dialog'
+import { ArchivePanel } from '@/components/archive-panel'
+import { CommentsSection } from '@/components/comments-section'
+import { ChecklistSection } from '@/components/checklist-section'
+import { ContactDialog } from '@/components/contact-dialog'
+import { ContactPanel } from '@/components/contact-panel'
+import { CrmBoard } from '@/components/crm-board'
+import { SpaceSecretsPanel } from '@/components/space-secrets-panel'
+
+type Column = { id: TaskStatus; title: string; color: string; dbId?: number }
+const fallbackColumns: Column[] = [
+  { id: 'backlog', title: 'Backlog', color: 'bg-slate-400' },
+  { id: 'progress', title: 'En progreso', color: 'bg-amber-500' },
+  { id: 'review', title: 'En revisión', color: 'bg-violet-500' },
+  { id: 'done', title: 'Completado', color: 'bg-emerald-500' },
+]
+const priorityLabels: Record<TaskPriority, string> = { low: 'Baja', medium: 'Media', high: 'Alta' }
+
+export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<string> }) {
+  const router = useRouter()
+  const [resolvedMilestoneId, setResolvedMilestoneId] = useState<number | null>(null)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [clients, setClients] = useState<Client[]>([])
+  const [activeClient, setActiveClient] = useState<number | null>(null)
+  const [spaces, setSpaces] = useState<Space[]>([])
+  const [activeSpace, setActiveSpace] = useState<number | null>(null)
+  const [boards, setBoards] = useState<Board[]>([])
+  const [activeBoard, setActiveBoard] = useState<number | null>(null)
+  const [boardLists, setBoardLists] = useState<BoardList[]>([])
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<TaskPriority | 'all'>('all')
+  const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all')
+  const [filterMilestone, setFilterMilestone] = useState<number | 'all' | 'none'>('all')
+  const [view, setView] = useState<'board' | 'list'>('board')
+  const [loading, setLoading] = useState(true)
+  const [newTitle, setNewTitle] = useState('')
+  const [selected, setSelected] = useState<Task | null>(null)
+  const [attachments, setAttachments] = useState<Attachment[]>([])
+  const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [menu, setMenu] = useState<TaskStatus | null>(null)
+  const [draggedId, setDraggedId] = useState<number | null>(null)
+  const [dragOver, setDragOver] = useState<TaskStatus | null>(null)
+  const [dropIndex, setDropIndex] = useState<number | null>(null)
+  const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus>('backlog')
+  const [addingToColumn, setAddingToColumn] = useState<TaskStatus | null>(null)
+  const [columnInputs, setColumnInputs] = useState<Record<string, string>>({})
+  const [draggedListId, setDraggedListId] = useState<number | null>(null)
+  const [newListDialog, setNewListDialog] = useState<{ open: boolean; name: string }>({ open: false, name: '' })
+  const [listMoveDialog, setListMoveDialog] = useState<{ open: boolean; listId: number | null; position: number }>({ open: false, listId: null, position: 1 })
+  const [clientDialog, setClientDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Client }>({ open: false, mode: 'add' })
+  const [spaceDialog, setSpaceDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Space }>({ open: false, mode: 'add' })
+  const [boardDialog, setBoardDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Board }>({ open: false, mode: 'add' })
+  const [milestones, setMilestones] = useState<Milestone[]>([])
+  const [milestoneDialog, setMilestoneDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Milestone }>({ open: false, mode: 'add' })
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({ open: false, title: '', message: '', onConfirm: () => {} })
+  const [allBoards, setAllBoards] = useState<Board[]>([])
+  const [budgetOpen, setBudgetOpen] = useState(false)
+  const [detailTab, setDetailTab] = useState<'details' | 'checklists' | 'attachments'>('details')
+  const [archiveOpen, setArchiveOpen] = useState(false)
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | null>(null)
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [crmStages, setCrmStages] = useState<CrmStage[]>([])
+  const [crmDeals, setCrmDeals] = useState<CrmDeal[]>([])
+  const [crmInteractions, setCrmInteractions] = useState<Record<number, CrmInteraction[]>>({})
+  const [activeView, setActiveView] = useState<'board' | 'crm' | 'contacts' | 'pipelines' | null>(null)
+  const [spaceSecretsOpen, setSpaceSecretsOpen] = useState(false)
+  const [contactDialog, setContactDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Contact }>({ open: false, mode: 'add' })
+  const [showComments, setShowComments] = useState(false)
+  const columns: Column[] = boardLists.length ? boardLists.map(list => ({ id: ({ Backlog: 'backlog', 'En progreso': 'progress', 'En revisión': 'review', Completado: 'done' } as Record<string, string>)[list.name] ?? `list-${list.id}`, dbId: list.id, title: list.name, color: list.color })) : fallbackColumns
+
+  useEffect(() => { Promise.all([fetch('/api/tasks').then(r => r.json()), fetch('/api/clients').then(r => r.json())]).then(([taskResult, clientResult]) => { const nextClients = clientResult.data ?? []; setTasks(taskResult.data ?? []); setClients(nextClients); setActiveClient(nextClients[0]?.id ?? null) }).finally(() => setLoading(false)) }, [])
+  useEffect(() => { if (!activeClient) return; fetch(`/api/spaces?clientId=${activeClient}`).then(r => r.json()).then(result => { setSpaces(result.data ?? []); setActiveSpace(result.data?.[0]?.id ?? null); if (!result.data?.length) { setBoards([]); setActiveBoard(null); setBoardLists([]) } const spaceIds = (result.data ?? []).map((s: Space) => s.id); return Promise.all(spaceIds.map((sid: number) => fetch(`/api/boards?spaceId=${sid}`).then(r => r.json()))) }).then(results => { const all = results.flatMap((r: { data?: Board[] }) => r.data ?? []); setAllBoards(all) }); fetch(`/api/milestones?clientId=${activeClient}`).then(r => r.json()).then(result => setMilestones(result.data ?? [])) }, [activeClient])
+  useEffect(() => { if (!activeSpace) return; fetch(`/api/boards?spaceId=${activeSpace}`).then(r => r.json()).then(result => { setBoards(result.data ?? []); if (!selectedMilestoneId) setActiveBoard(result.data?.[0]?.id ?? null); if (!result.data?.length) { setBoardLists([]) } }) }, [activeSpace, selectedMilestoneId])
+  useEffect(() => { if (!activeBoard || selectedMilestoneId) { if (selectedMilestoneId && allBoards.length) { Promise.all(allBoards.map(b => fetch(`/api/lists?boardId=${b.id}`).then(r => r.json()))).then(results => { const all = results.flatMap((r: { data?: BoardList[] }) => r.data ?? []); const seen = new Set<string>(); const unique = all.filter(l => { const key = l.name; if (seen.has(key)) return false; seen.add(key); return true }); setBoardLists(unique) }) } else { setBoardLists([]) } return } fetch(`/api/lists?boardId=${activeBoard}`).then(r => r.json()).then(result => setBoardLists(result.data ?? [])) }, [activeBoard, selectedMilestoneId, allBoards])
+  useEffect(() => { fetch('/api/attachments').then(r => r.json()).then(result => { const counts: Record<number, number> = {}; for (const attachment of (result.data ?? []) as Attachment[]) counts[attachment.taskId] = (counts[attachment.taskId] ?? 0) + 1; setAttachmentCounts(counts) }) }, [tasks.length])
+  useEffect(() => { if (milestoneId) { milestoneId.then(id => setResolvedMilestoneId(Number(id))) } }, [milestoneId])
+  useEffect(() => { fetch('/api/contacts').then(r => r.json()).then(result => setContacts(result.data ?? [])) }, [])
+  useEffect(() => { fetch('/api/crm/stages').then(r => r.json()).then(result => setCrmStages(result.data ?? [])) }, [])
+  useEffect(() => { fetch('/api/crm/deals').then(r => r.json()).then(result => setCrmDeals(result.data ?? [])) }, [])
+  useEffect(() => {
+    if (selectedMilestoneId) {
+      setFilterMilestone(selectedMilestoneId)
+      return
+    }
+    if (resolvedMilestoneId) {
+      setFilterMilestone(resolvedMilestoneId)
+      return
+    }
+    setFilterMilestone('all')
+  }, [selectedMilestoneId, resolvedMilestoneId])
+  const visible = useMemo(() => {
+    const base = selectedMilestoneId ? tasks.filter(t => t.milestoneId === selectedMilestoneId) : resolvedMilestoneId ? tasks.filter(t => t.milestoneId === resolvedMilestoneId) : activeBoard ? tasks.filter(t => (t as Task & { boardId?: number }).boardId === activeBoard) : []
+    return base
+      .filter(t => (filter === 'all' || t.priority === filter) && (filterStatus === 'all' || t.status === filterStatus) && (filterMilestone === 'all' ? true : filterMilestone === 'none' ? t.milestoneId == null : t.milestoneId === filterMilestone) && t.title.toLowerCase().includes(search.toLowerCase()))
+      .sort((a, b) => a.position - b.position)
+  }, [tasks, search, filter, filterStatus, filterMilestone, activeBoard, resolvedMilestoneId, selectedMilestoneId])
+  function clearFilters() {
+    setSearch('')
+    setFilter('all')
+    setFilterStatus('all')
+    setFilterMilestone(selectedMilestoneId ?? resolvedMilestoneId ?? 'all')
+  }
+  async function addClient() { setClientDialog({ open: true, mode: 'add' }) }
+  async function editClient(client: Client) { setClientDialog({ open: true, mode: 'edit', data: client }) }
+  async function handleClientSave(formData: { name: string; email: string; company: string }) {
+    if (clientDialog.mode === 'add') {
+      const res = await fetch('/api/clients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+      if (!res.ok) return
+      const { data } = await res.json()
+      setClients(v => [...v, data])
+      setActiveClient(data.id)
+    } else if (clientDialog.data) {
+      const res = await fetch(`/api/clients/${clientDialog.data.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+      if (!res.ok) return
+      const { data } = await res.json()
+      setClients(v => v.map(item => item.id === data.id ? data : item))
+    }
+  }
+  async function removeClient(client: Client) { if (clients.length <= 1) return; setConfirmDialog({ open: true, title: 'Eliminar cliente', message: `¿Eliminar ${client.name}, sus espacios y tareas?`, onConfirm: async () => { const res = await fetch(`/api/clients/${client.id}`, { method: 'DELETE' }); if (!res.ok) return; const remaining = clients.filter(item => item.id !== client.id); setClients(remaining); setActiveClient(remaining[0]?.id ?? null); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function addSpace() { setSpaceDialog({ open: true, mode: 'add' }) }
+  async function editSpace(space: Space) { setSpaceDialog({ open: true, mode: 'edit', data: space }) }
+  async function handleSpaceSave(formData: { name: string; color: string; secretPassword?: string | null }) {
+    if (spaceDialog.mode === 'add') {
+      const res = await fetch('/api/spaces', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...formData, clientId: activeClient }) })
+      if (!res.ok) return
+      const { data } = await res.json()
+      setSpaces(v => [...v, data])
+      setActiveSpace(data.id)
+    } else if (spaceDialog.data) {
+      const res = await fetch(`/api/spaces/${spaceDialog.data.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+      if (!res.ok) return
+      const { data } = await res.json()
+      setSpaces(v => v.map(item => item.id === data.id ? data : item))
+    }
+  }
+  async function removeSpace(space: Space) { if (spaces.length <= 1) return; setConfirmDialog({ open: true, title: 'Eliminar espacio', message: `¿Eliminar el espacio ${space.name} y sus tableros?`, onConfirm: async () => { const res = await fetch(`/api/spaces/${space.id}`, { method: 'DELETE' }); if (!res.ok) return; const remaining = spaces.filter(s => s.id !== space.id); setSpaces(remaining); setActiveSpace(remaining[0]?.id ?? null); setTasks(v => v.filter(t => (t as Task & { boardId?: number }).boardId !== undefined)); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function addBoard() { setBoardDialog({ open: true, mode: 'add' }) }
+  async function editBoard(board: Board) { setBoardDialog({ open: true, mode: 'edit', data: board }) }
+  async function handleBoardSave(formData: { name: string; type: string; paymentStatus?: import('@/lib/db').BoardPaymentStatus }) {
+    if (boardDialog.mode === 'add') {
+      const res = await fetch('/api/boards', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...formData, spaceId: activeSpace }) })
+      if (!res.ok) return
+      const { data } = await res.json()
+      setBoards(v => [...v, data])
+      setActiveBoard(data.id)
+    } else if (boardDialog.data) {
+      const res = await fetch(`/api/boards/${boardDialog.data.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+      if (!res.ok) return
+      const { data } = await res.json()
+      setBoards(v => v.map(item => item.id === data.id ? data : item))
+    }
+  }
+  async function removeBoard(board: Board) { if (boards.length <= 1) return; setConfirmDialog({ open: true, title: 'Eliminar tablero', message: `¿Eliminar el tablero ${board.name} y sus listas?`, onConfirm: async () => { const res = await fetch(`/api/boards/${board.id}`, { method: 'DELETE' }); if (!res.ok) return; const remaining = boards.filter(b => b.id !== board.id); setBoards(remaining); setActiveBoard(remaining[0]?.id ?? null); setTasks(v => v.filter(t => (t as Task & { boardId?: number }).boardId !== board.id)); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function updateBoardPaymentStatus(boardId: number, paymentStatus: import('@/lib/db').BoardPaymentStatus) { const res = await fetch(`/api/boards/${boardId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentStatus }) }); if (!res.ok) return; const { data } = await res.json(); setBoards(v => v.map(b => b.id === data.id ? data : b)); if (data.paymentStatus !== 'pendiente' && activeBoard === boardId) setActiveBoard(null) }
+  async function addMilestone() { setMilestoneDialog({ open: true, mode: 'add' }) }
+  async function editMilestone(milestone: Milestone) { setMilestoneDialog({ open: true, mode: 'edit', data: milestone }) }
+  async function handleMilestoneSave(formData: { name: string; color: string }) {
+    if (milestoneDialog.mode === 'add') {
+      const res = await fetch('/api/milestones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...formData, clientId: activeClient }) })
+      if (!res.ok) return
+      const { data } = await res.json()
+      setMilestones(v => [...v, data])
+    } else if (milestoneDialog.data) {
+      const res = await fetch(`/api/milestones/${milestoneDialog.data.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+      if (!res.ok) return
+      const { data } = await res.json()
+      setMilestones(v => v.map(item => item.id === data.id ? data : item))
+    }
+  }
+  async function removeMilestone(milestone: Milestone) { setConfirmDialog({ open: true, title: 'Eliminar hito', message: `¿Eliminar el hito ${milestone.name}?`, onConfirm: async () => { const res = await fetch(`/api/milestones/${milestone.id}`, { method: 'DELETE' }); if (!res.ok) return; setMilestones(v => v.filter(m => m.id !== milestone.id)); setTasks(v => v.map(t => t.milestoneId === milestone.id ? { ...t, milestoneId: null } : t)); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function addBoardList() { if (!activeBoard) return; setNewListDialog({ open: true, name: '' }) }
+  async function submitBoardList() {
+    if (!activeBoard) return
+    const name = newListDialog.name.trim()
+    if (!name) return
+    const res = await fetch('/api/lists', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ boardId: activeBoard, name }) })
+    if (!res.ok) return
+    const { data } = await res.json()
+    setBoardLists(v => [...v, data])
+    setNewTaskStatus(`list-${data.id}`)
+    setNewListDialog({ open: false, name: '' })
+  }
+  async function moveBoardList(listId: number, targetPosition: number) {
+    const currentIndex = boardLists.findIndex(list => list.id === listId)
+    const nextPosition = Math.min(Math.max(targetPosition, 0), Math.max(boardLists.length - 1, 0))
+    if (currentIndex === -1 || currentIndex === nextPosition) return
+    const reordered = [...boardLists]
+    const [moved] = reordered.splice(currentIndex, 1)
+    reordered.splice(nextPosition, 0, moved)
+    setBoardLists(reordered)
+    await fetch(`/api/lists/${listId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ position: nextPosition })
+    })
+  }
+  async function moveBoardListByModal(listId: number, targetPosition: number) {
+    await moveBoardList(listId, targetPosition)
+    setListMoveDialog({ open: false, listId: null, position: 1 })
+  }
+  async function removeBoardList(column: Column) { if (!column.dbId) return; setConfirmDialog({ open: true, title: 'Eliminar lista', message: `¿Eliminar la lista ${column.title}? Las tareas de esta lista también se eliminarán.`, onConfirm: async () => { const res = await fetch(`/api/lists/${column.dbId}`, { method: 'DELETE' }); if (!res.ok) return; setBoardLists(v => v.filter(list => list.id !== column.dbId)); setTasks(v => v.filter(task => task.status !== column.id)); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function addTask(status: TaskStatus = 'backlog') { const title = (columnInputs[status] ?? newTitle).trim(); if (!title) return; const res = await fetch('/api/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, status, boardId: activeBoard }) }); if (!res.ok) return; const { data } = await res.json(); setTasks(v => [...v, data]); setNewTitle(''); setColumnInputs(v => ({ ...v, [status]: '' })); setAddingToColumn(null) }
+  async function move(id: number, status: TaskStatus, position: number) { setTasks(v => { const task = v.find(t => t.id === id); if (!task) return v; const sameColumn = v.filter(t => t.status === status && t.id !== id); const updated = v.map(t => t.id === id ? { ...t, status, position } : t); const others = updated.filter(t => t.status === status && t.id !== id).sort((a, b) => a.position - b.position); others.splice(position, 0, { ...task, status, position }); return updated.map(t => { if (t.status !== status || t.id === id) return t; const idx = others.findIndex(o => o.id === t.id); return idx >= 0 ? { ...t, position: idx } : t }) }); setSelected(v => v?.id === id ? { ...v, status } : v); await fetch(`/api/tasks/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status, position }) }) }
+  async function loadAttachments(taskId: number) { const result = await fetch(`/api/attachments?taskId=${taskId}`).then(r => r.json()); setAttachments(Array.isArray(result.data) ? result.data.filter((item: Attachment | null | undefined): item is Attachment => Boolean(item && item.id && item.name)) : []) }
+  async function selectTask(task: Task) { setSelected(task); await loadAttachments(task.id) }
+  async function uploadFiles(files: FileList | File[]) { if (!selected || !files.length) return; setUploadError(null); setIsUploading(true); try { const uploaded = await Promise.all(Array.from(files).map(async file => { const form = new FormData(); form.append('taskId', String(selected.id)); form.append('file', file); const response = await fetch('/api/attachments', { method: 'POST', body: form }); const payload = await response.json(); if (!response.ok || !payload.data?.id) throw new Error(payload.error || `No se pudo subir ${file.name}`); return payload.data as Attachment })); const valid = uploaded.filter(item => item?.id && item.name); setAttachments(v => [...valid, ...v]); setAttachmentCounts(v => ({ ...v, [selected.id]: (v[selected.id] ?? 0) + valid.length })) } catch (error) { setUploadError(error instanceof Error ? error.message : 'No se pudo subir el archivo') } finally { setIsUploading(false) } }
+  async function removeAttachment(attachment: Attachment) { await fetch(`/api/attachments/${attachment.id}`, { method: 'DELETE' }); setAttachments(v => v.filter(item => item.id !== attachment.id)) }
+  async function updateMilestoneOnTask(id: number, milestoneId: number | null) { const res = await fetch(`/api/tasks/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ milestoneId }) }); if (!res.ok) return; const { data } = await res.json(); setTasks(v => v.map(t => t.id === data.id ? data : t)); setSelected(prev => prev?.id === data.id ? { ...prev, milestoneId: data.milestoneId } : prev) }
+  async function updateTaskDates(id: number, field: 'startDate' | 'dueDate', value: string | null) { const res = await fetch(`/api/tasks/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [field]: value }) }); if (!res.ok) return; const { data } = await res.json(); setTasks(v => v.map(t => t.id === data.id ? data : t)); setSelected(prev => prev?.id === data.id ? { ...prev, [field]: value } : prev) }
+  async function updateTaskDescription(id: number, description: string) { const res = await fetch(`/api/tasks/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ description }) }); if (!res.ok) return; const { data } = await res.json(); setTasks(v => v.map(t => t.id === data.id ? data : t)); setSelected(prev => prev?.id === data.id ? { ...prev, description } : prev) }
+  async function remove(id: number) { await fetch(`/api/tasks/${id}`, { method: 'DELETE' }); setTasks(v => v.filter(t => t.id !== id)); setSelected(null) }
+  async function addContact() { setContactDialog({ open: true, mode: 'add' }) }
+  async function editContact(contact: Contact) { setContactDialog({ open: true, mode: 'edit', data: contact }) }
+  async function handleContactSave(formData: { name: string; email: string; phone: string; company: string; position: string; address: string; website: string; notes: string }) {
+    if (contactDialog.mode === 'add') {
+      const res = await fetch('/api/contacts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+      if (!res.ok) return
+      const { data } = await res.json()
+      setContacts(v => [...v, data])
+    } else if (contactDialog.data) {
+      const res = await fetch(`/api/contacts/${contactDialog.data.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+      if (!res.ok) return
+      const { data } = await res.json()
+      setContacts(v => v.map(c => c.id === data.id ? data : c))
+    }
+  }
+  async function removeContact(contact: Contact) { setConfirmDialog({ open: true, title: 'Eliminar contacto', message: `¿Eliminar el contacto ${contact.name} y sus deals?`, onConfirm: async () => { const res = await fetch(`/api/contacts/${contact.id}`, { method: 'DELETE' }); if (!res.ok) return; setContacts(v => v.filter(c => c.id !== contact.id)); setCrmDeals(v => v.filter(d => d.contactId !== contact.id)); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function handleContactPanelAdd(data: { name: string; email: string; phone: string; company: string; position: string; address: string; website: string; notes: string }) { const res = await fetch('/api/contacts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (!res.ok) return; const { data: newContact } = await res.json(); setContacts(v => [...v, newContact]) }
+  async function handleContactPanelEdit(id: number, data: { name: string; email: string; phone: string; company: string; position: string; address: string; website: string; notes: string }) { const res = await fetch(`/api/contacts/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (!res.ok) return; const { data: updated } = await res.json(); setContacts(v => v.map(c => c.id === updated.id ? updated : c)) }
+  async function handleContactPanelDelete(id: number) { await fetch(`/api/contacts/${id}`, { method: 'DELETE' }); setContacts(v => v.filter(c => c.id !== id)); setCrmDeals(v => v.filter(d => d.contactId !== id)) }
+  async function loadCrmInteractions(dealId: number) { const res = await fetch(`/api/crm/interactions?dealId=${dealId}`); const result = await res.json(); setCrmInteractions(v => ({ ...v, [dealId]: result.data ?? [] })) }
+  async function addCrmDeal(contactId: number, stageId: number) { const res = await fetch('/api/crm/deals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contactId, stageId }) }); if (!res.ok) return; const { data } = await res.json(); setCrmDeals(v => [...v, data]) }
+  async function moveCrmDeal(dealId: number, stageId: number) { const res = await fetch(`/api/crm/deals/${dealId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stageId }) }); if (!res.ok) return; const { data } = await res.json(); setCrmDeals(v => v.map(d => d.id === data.id ? data : d)) }
+  async function deleteCrmDeal(dealId: number) { await fetch(`/api/crm/deals/${dealId}`, { method: 'DELETE' }); setCrmDeals(v => v.filter(d => d.id !== dealId)); setCrmInteractions(v => { const next = { ...v }; delete next[dealId]; return next }) }
+  async function addCrmStage(name: string, color: string) { const res = await fetch('/api/crm/stages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, color }) }); if (!res.ok) return; const { data } = await res.json(); setCrmStages(v => [...v, data]) }
+  async function deleteCrmStage(id: number) { await fetch(`/api/crm/stages/${id}`, { method: 'DELETE' }); setCrmStages(v => v.filter(s => s.id !== id)); setCrmDeals(v => v.filter(d => d.stageId !== id)) }
+  async function addCrmInteraction(dealId: number, type: CrmInteraction['type'], description: string, date: string) { const res = await fetch('/api/crm/interactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dealId, type, description, date }) }); if (!res.ok) return; await loadCrmInteractions(dealId) }
+  async function deleteCrmInteraction(id: number) { await fetch(`/api/crm/interactions/${id}`, { method: 'DELETE' }); for (const dealId of Object.keys(crmInteractions)) { setCrmInteractions(v => ({ ...v, [dealId]: (v[Number(dealId)] ?? []).filter(i => i.id !== id) })) } }
+  const completed = tasks.filter(t => t.status === 'done').length
+  const isMilestoneView = !!(resolvedMilestoneId || selectedMilestoneId)
+  const activeMilestoneId = resolvedMilestoneId ?? selectedMilestoneId
+  const activeMilestone = milestones.find(m => m.id === activeMilestoneId)
+  const milestoneTasks = isMilestoneView ? tasks.filter(t => t.milestoneId === activeMilestoneId) : []
+  const milestoneBoards = allBoards.filter(b => milestoneTasks.some(t => (t as Task & { boardId?: number }).boardId === b.id))
+
+  function handleSelectClient(id: number) {
+    setActiveClient(id)
+    setSelectedMilestoneId(null)
+    fetch(`/api/spaces?clientId=${id}`)
+      .then(r => r.json())
+      .then(d => {
+        const spaces = d.data ?? []
+        if (spaces.length > 0) {
+          const firstSpaceId = spaces[0].id
+          setActiveSpace(firstSpaceId)
+          fetch(`/api/boards?spaceId=${firstSpaceId}`)
+            .then(r => r.json())
+            .then(b => {
+              const boards = b.data ?? []
+              if (boards.length > 0) {
+                setActiveBoard(boards[0].id)
+              }
+            })
+        }
+      })
+  }
+
+  return <>
+    <main className="min-h-screen bg-background text-foreground" onClick={() => menu && setMenu(null)}>
+    <Sidebar activeView={activeView} onSelectView={view => setActiveView(view)} crmDealCount={crmDeals.length} clients={clients} milestones={milestones} activeClient={activeClient} onSelectClient={handleSelectClient} onEditClient={editClient} onRemoveClient={removeClient} onAddClient={addClient} spaces={spaces} activeSpace={activeSpace} onSelectSpace={id => { setActiveSpace(id); setSelectedMilestoneId(null) }} onEditSpace={editSpace} onRemoveSpace={removeSpace} onAddSpace={addSpace} onOpenSecrets={() => setSpaceSecretsOpen(true)} boards={boards} activeBoard={activeBoard} onSelectBoard={id => { setActiveBoard(id); setSelectedMilestoneId(null); setActiveView(null) }} onEditBoard={editBoard} onRemoveBoard={removeBoard} onAddBoard={addBoard} onAddMilestone={addMilestone} onEditMilestone={editMilestone} onRemoveMilestone={removeMilestone} onSelectMilestone={ms => setSelectedMilestoneId(ms.id === selectedMilestoneId ? null : ms.id)} highlightMilestoneId={selectedMilestoneId} />
+    <section className="lg:pl-64">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-5 md:px-10">
+        <div>
+          {isMilestoneView ? (
+            <>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Reporte de Hito</p>
+              <h1 className="mt-1 flex items-center gap-3 text-2xl font-semibold tracking-tight">
+                {activeMilestone && <span className={`size-3 rounded-full ${activeMilestone.color}`} />}
+                {activeMilestone?.name ?? 'Hito'}
+              </h1>
+            </>
+          ) : activeView === 'crm' || activeView === 'pipelines' ? (
+            <>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">CRM</p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight">Pipelines</h1>
+            </>
+          ) : activeView === 'contacts' ? (
+            <>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">CRM</p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight">Contactos</h1>
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Espacio de trabajo / {spaces.find(s => s.id === activeSpace)?.name ?? 'Producto'} / {boards.find(b => b.id === activeBoard)?.name ?? 'Tablero'}</p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight">{boards.find(b => b.id === activeBoard)?.name ?? 'Tablero'}</h1>
+            </>
+          )}
+        </div>
+      </header>
+
+      {isMilestoneView ? (
+        <div className="px-5 py-6 md:px-10">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="rounded-xl border border-border p-4 text-center">
+              <p className="text-2xl font-bold">{milestoneTasks.length}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Tareas</p>
+            </div>
+            <div className="rounded-xl border border-border p-4 text-center">
+              <p className="text-2xl font-bold text-emerald-500">{milestoneTasks.filter(t => t.status === 'done').length}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Completadas</p>
+            </div>
+            <div className="rounded-xl border border-border p-4 text-center">
+              <p className="text-2xl font-bold">{milestoneTasks.length ? Math.round(milestoneTasks.filter(t => t.status === 'done').length / milestoneTasks.length * 100) : 0}%</p>
+              <p className="mt-1 text-xs text-muted-foreground">Progreso</p>
+            </div>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-border">
+            <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${milestoneTasks.length ? Math.round(milestoneTasks.filter(t => t.status === 'done').length / milestoneTasks.length * 100) : 0}%` }} />
+          </div>
+          <div className="mt-8 flex flex-col gap-6">
+            {milestoneBoards.map(board => {
+              const boardTasks = milestoneTasks.filter(t => (t as Task & { boardId?: number }).boardId === board.id).sort((a, b) => a.position - b.position)
+              const boardDone = boardTasks.filter(t => t.status === 'done').length
+              return (
+                <div key={board.id} className="rounded-xl border border-border bg-card">
+                  <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                    <h2 className="text-sm font-semibold">{board.name}</h2>
+                    <span className="text-xs text-muted-foreground">{boardDone}/{boardTasks.length} completadas</span>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {boardTasks.map(task => (
+                      <button key={task.id} onClick={() => void selectTask(task)} className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-secondary/60">
+                        <span className="flex items-center gap-3">
+                          <span className={`size-2 rounded-full ${task.priority === 'high' ? 'bg-red-500' : task.priority === 'medium' ? 'bg-yellow-500' : 'bg-emerald-500'}`} />
+                          <span className="text-sm font-medium">{task.title}</span>
+                        </span>
+                        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="rounded-full bg-secondary px-2 py-0.5">{columns.find(c => c.id === task.status)?.title}</span>
+                          {task.dueDate && <span className={new Date(task.dueDate) < new Date() && task.status !== 'done' ? 'text-destructive font-medium' : ''}>{new Date(task.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}</span>}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+            {milestoneBoards.length === 0 && <p className="text-center text-sm text-muted-foreground">No hay tareas asociadas a este hito.</p>}
+          </div>
+        </div>
+      ) : activeView === 'crm' || activeView === 'pipelines' ? (
+        <>
+          {activeView === 'contacts' ? <ContactPanel contacts={contacts} onAdd={handleContactPanelAdd} onEdit={handleContactPanelEdit} onDelete={handleContactPanelDelete} /> : <CrmBoard stages={crmStages} deals={crmDeals} contacts={contacts} interactions={crmInteractions} onAddDeal={addCrmDeal} onMoveDeal={moveCrmDeal} onDeleteDeal={deleteCrmDeal} onAddStage={addCrmStage} onDeleteStage={deleteCrmStage} onAddInteraction={addCrmInteraction} onDeleteInteraction={deleteCrmInteraction} onRefreshInteractions={loadCrmInteractions} onAddContact={addContact} />}
+        </>
+      ) : activeView === 'contacts' ? (
+        <ContactPanel contacts={contacts} onAdd={handleContactPanelAdd} onEdit={handleContactPanelEdit} onDelete={handleContactPanelDelete} />
+      ) : (
+        <div className="px-5 py-6 md:px-10">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <input value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border border-border bg-card pl-9 pr-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" placeholder="Buscar tareas..." />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5">
+                <SlidersHorizontal className="size-4 text-muted-foreground" />
+                <select value={filter} onChange={e => setFilter(e.target.value as TaskPriority | 'all')} className="bg-transparent text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por prioridad">
+                  <option value="all">Prioridad</option>
+                  <option value="high">Alta</option>
+                  <option value="medium">Media</option>
+                  <option value="low">Baja</option>
+                </select>
+                {filter !== 'all' && <button onClick={() => setFilter('all')} className="ml-1 rounded-full bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
+              </div>
+
+              <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5">
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as TaskStatus | 'all')} className="bg-transparent text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por estado">
+                  <option value="all">Estado</option>
+                  <option value="backlog">Backlog</option>
+                  <option value="progress">En progreso</option>
+                  <option value="review">En revisión</option>
+                  <option value="done">Completado</option>
+                </select>
+                {filterStatus !== 'all' && <button onClick={() => setFilterStatus('all')} className="ml-1 rounded-full bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
+              </div>
+
+              <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5">
+                <select value={filterMilestone} onChange={e => setFilterMilestone(e.target.value === 'all' || e.target.value === 'none' ? e.target.value : Number(e.target.value))} className="bg-transparent text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por hito">
+                  <option value="all">Hito</option>
+                  {milestones.map(ms => <option key={ms.id} value={ms.id}>{ms.name}</option>)}
+                  <option value="none">Sin hito</option>
+                </select>
+                {filterMilestone !== 'all' && <button onClick={() => setFilterMilestone(selectedMilestoneId ?? resolvedMilestoneId ?? 'all')} className="ml-1 rounded-full bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
+              </div>
+
+              {(search || filter !== 'all' || filterStatus !== 'all' || (filterMilestone !== 'all' && filterMilestone !== selectedMilestoneId && filterMilestone !== resolvedMilestoneId)) && (
+                <button onClick={clearFilters} className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/20">
+                  <X className="size-3.5" />
+                  Limpiar
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button onClick={() => setView(view === 'board' ? 'list' : 'board')} className="rounded-lg border border-border p-2.5 text-muted-foreground hover:bg-secondary" aria-label="Cambiar vista">{view === 'board' ? <List className="size-4" /> : <LayoutGrid className="size-4" />}</button>
+              {activeBoard && <button onClick={() => setBudgetOpen(true)} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary"><DollarSign className="size-4" /> Presupuesto</button>}
+            </div>
+          </div>
+          {view === 'list' ? <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card">{visible.map(task => <button key={task.id} onClick={() => void selectTask(task)} className="flex w-full items-center justify-between border-b border-border px-4 py-4 text-left last:border-0 hover:bg-secondary/60"><span><span className="flex items-center gap-2 text-sm font-medium">{task.title}<span className="inline-flex items-center gap-1 text-xs font-normal text-muted-foreground"><Paperclip className="size-3" />{attachmentCounts[task.id] ?? 0}</span></span><span className="text-xs text-muted-foreground">{columns.find(c => c.id === task.status)?.title} · {priorityLabels[task.priority]}</span>{task.dueDate && <span className={`ml-2 text-xs ${new Date(task.dueDate) < new Date() && task.status !== 'done' ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>{new Date(task.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}</span>}</span></button>)}</div> : <div className="mt-8 flex items-start gap-5 overflow-x-auto pb-4 min-h-screen">{columns.map(column => <div key={column.id} className={`flex w-[290px] min-w-[290px] flex-col rounded-xl p-2 transition-colors ${dragOver === column.id ? 'bg-secondary/70' : ''}`} onDragOver={e => { e.preventDefault(); setDragOver(column.id); const colTasks = visible.filter(t => t.status === column.id && t.id !== draggedId); let idx = colTasks.length; const articles = e.currentTarget.querySelectorAll('article'); for (let i = 0; i < articles.length; i++) { const r = articles[i].getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) { idx = i; break } } setDropIndex(idx) }} onDragLeave={() => { setDragOver(null); setDropIndex(null) }} onDrop={e => { e.preventDefault(); if (draggedId !== null) { const colTasks = visible.filter(t => t.status === column.id && t.id !== draggedId); const rect = e.currentTarget.getBoundingClientRect(); const y = e.clientY - rect.top; let pos = colTasks.length; const articles = e.currentTarget.querySelectorAll('article'); for (let i = 0; i < articles.length; i++) { const articleRect = articles[i].getBoundingClientRect(); if (y < articleRect.top + articleRect.height / 2) { pos = i; break } } void move(draggedId, column.id, pos) } setDraggedId(null); setDragOver(null); setDropIndex(null) }}><div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><span className={`size-2.5 rounded-full ${column.color}`} /><h2 className="text-sm font-semibold">{column.title}</h2><span className="rounded-md bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">{visible.filter(t => t.status === column.id).length}</span></div><div className="relative flex items-center gap-1.5"><button onClick={e => { e.stopPropagation(); setMenu(menu === column.id ? null : column.id) }} className="rounded-lg border border-border bg-background p-1.5 text-muted-foreground transition hover:bg-secondary" aria-label={`Más opciones ${column.title}`}><MoreHorizontal className="size-3.5" /></button>{menu === column.id && <div className="absolute right-0 top-10 z-10 w-44 rounded-lg border border-border bg-card p-1 shadow-lg"><button onClick={e => { e.stopPropagation(); if (column.dbId) setListMoveDialog({ open: true, listId: column.dbId, position: boardLists.findIndex(list => list.id === column.dbId) + 1 }); setMenu(null) }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-secondary"><MoveHorizontal className="size-4" /> Reordenar</button><div className="my-1 h-px bg-border" /><button onClick={e => { e.stopPropagation(); void removeBoardList(column); setMenu(null) }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-destructive hover:bg-secondary"><Trash2 className="size-4" /> Eliminar lista</button></div>}</div></div><div className="flex min-h-0 flex-1 flex-col gap-3">{loading ? <p className="text-sm text-muted-foreground">Cargando...</p> : visible.filter(t => t.status === column.id).map((task, taskIdx) => <span key={task.id}><span className={`block h-0.5 rounded bg-primary transition-all ${dragOver === column.id && dropIndex === taskIdx && draggedId !== task.id ? 'opacity-100' : 'opacity-0'}`} /><article draggable onDragStart={e => { e.stopPropagation(); setDraggedId(task.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(task.id)) }} onDragEnd={() => { setDraggedId(null); setDragOver(null); setDropIndex(null) }} onClick={() => void selectTask(task)} className={`cursor-grab rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/50 active:cursor-grabbing ${draggedId === task.id ? 'opacity-50' : ''}`}><div className="flex items-start justify-between gap-3"><h3 className="text-sm font-medium leading-5"><span className="flex items-center gap-1.5">{task.title}<span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground"><Paperclip className="size-3" /> Adjuntos · {attachmentCounts[task.id] ?? 0}</span></span></h3><span className={`size-2 shrink-0 rounded-full ${task.priority === 'high' ? 'bg-destructive' : task.priority === 'medium' ? 'bg-amber-500' : 'bg-muted-foreground'}`} /></div><p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{task.description || 'Sin descripción todavía.'}</p><div className="mt-4 flex items-center justify-between text-xs text-muted-foreground"><span>{task.assignee}</span><span className={task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done' ? 'text-destructive font-medium' : ''}>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Sin fecha'}</span></div></article></span>)}</div><span className={`block h-0.5 rounded bg-primary transition-all ${dragOver === column.id && dropIndex === visible.filter(t => t.status === column.id).length && draggedId !== null ? 'opacity-100' : 'opacity-0'}`} />{addingToColumn === column.id ? <div className="mt-3 flex flex-col gap-2"><input autoFocus value={columnInputs[column.id] ?? ''} onChange={e => setColumnInputs(v => ({ ...v, [column.id]: e.target.value }))} onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); void addTask(column.id) } if (e.key === 'Escape') setAddingToColumn(null) }} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary" placeholder="Título de la tarjeta..." /><div className="flex gap-2"><button onClick={() => void addTask(column.id)} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Añadir</button><button onClick={() => setAddingToColumn(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary">Cancelar</button></div></div> : <button onClick={() => { setAddingToColumn(column.id); setColumnInputs(v => ({ ...v, [column.id]: '' })) }} className="mt-auto flex w-full items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-secondary"><Plus className="size-4" /> Añadir tarjeta</button>}</div>)}<button onClick={() => void addBoardList()} className="flex h-[40px] min-w-[290px] shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:bg-secondary/50 hover:text-foreground"><Plus className="size-4" /> Añadir lista</button></div>}
+        </div>
+      )}
+    </section>
+    {selected && (
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-background/70 p-0 sm:p-4" role="presentation" onClick={() => setSelected(null)}>
+          <div onClick={e => e.stopPropagation()} className="flex h-full sm:h-[90vh] w-full sm:max-w-4xl flex-col rounded-none sm:rounded-2xl border-0 sm:border border-border bg-card shadow-xl">
+            <div className="flex items-center justify-between border-b border-border px-4 sm:px-6 py-3 sm:py-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground">Detalle de tarea</p>
+                <h2 className="mt-0.5 text-base sm:text-lg font-semibold truncate">{selected.title}</h2>
+              </div>
+              <button onClick={() => setSelected(null)} className="shrink-0 rounded-lg p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar"><X className="size-4" /></button>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col sm:flex-row overflow-hidden">
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <div className="flex gap-1 border-b border-border px-4 sm:px-6 pt-3">
+                  {[{ id: 'details' as const, label: 'Detalles' }, { id: 'checklists' as const, label: 'Checklists' }, { id: 'attachments' as const, label: 'Adjuntos' }].map(tab => <button key={tab.id} onClick={() => setDetailTab(tab.id)} className={`rounded-t-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors ${detailTab === tab.id ? 'border-b-2 border-primary text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{tab.label}</button>)}
+                  <button onClick={() => setShowComments(v => !v)} className={`ml-auto flex items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs sm:text-sm font-medium transition-colors sm:hidden ${showComments ? 'border-b-2 border-primary text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                    <span className="text-[10px] sm:text-xs">Comentarios</span>
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5">
+                  {detailTab === 'details' && <>
+                    <div><h3 className="mb-2 text-sm font-semibold">Descripción</h3><textarea value={selected.description} onChange={e => void updateTaskDescription(selected.id, e.target.value)} placeholder="Sin descripción todavía..." className="min-h-[80px] w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm leading-6 outline-none focus:border-primary" /></div>
+                    <section className="mt-5 border-t border-border pt-5">
+                      <h3 className="mb-3 text-sm font-semibold">Hito</h3>
+                      <select value={selected.milestoneId ?? ''} onChange={e => { const val = e.target.value ? Number(e.target.value) : null; void updateMilestoneOnTask(selected.id, val) }} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary">
+                        <option value="">Sin hito</option>
+                        {milestones.map(ms => <option key={ms.id} value={ms.id}>{ms.name}</option>)}
+                      </select>
+                    </section>
+                    <section className="mt-5 border-t border-border pt-5">
+                      <h3 className="mb-3 text-sm font-semibold">Fechas</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1"><label className="text-xs text-muted-foreground">Inicio</label><input type="date" value={selected.startDate ?? ''} onChange={e => updateTaskDates(selected.id, 'startDate', e.target.value || null)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" /></div>
+                        <div className="flex flex-col gap-1"><label className="text-xs text-muted-foreground">Vencimiento</label><input type="date" value={selected.dueDate ?? ''} onChange={e => updateTaskDates(selected.id, 'dueDate', e.target.value || null)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" /></div>
+                      </div>
+                    </section>
+                  </>}
+                  {detailTab === 'checklists' && <ChecklistSection taskId={selected.id} />}
+                  {detailTab === 'attachments' && <section>
+                    <div className="flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-semibold"><Paperclip className="size-4" /> Adjuntos</h3><label className="cursor-pointer rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:bg-secondary"><span>{isUploading ? 'Subiendo...' : 'Añadir'}</span><input type="file" multiple className="sr-only" disabled={isUploading} onChange={e => { if (e.target.files) void uploadFiles(e.target.files); e.currentTarget.value = '' }} /></label></div>
+                    <p className="mt-4 text-xs font-semibold text-muted-foreground">Archivos ({attachments.length})</p>
+                    {uploadError && <p role="alert" className="mt-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{uploadError}</p>}
+                    <div className="mt-2 flex flex-col gap-2" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); void uploadFiles(e.dataTransfer.files) }}>
+                      {attachments.length ? attachments.filter(attachment => Boolean(attachment && attachment.name)).map(attachment => <div key={attachment.id} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5"><div className="grid size-10 shrink-0 place-items-center rounded-md bg-secondary text-xs font-bold uppercase">{attachment.name.split('.').pop() || 'FILE'}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{attachment.name}</p><p className="text-xs text-muted-foreground">Añadido: {new Date(attachment.createdAt).toLocaleString('es-ES')} · {(attachment.size / 1024).toFixed(0)} KB</p></div><a href={attachment.pathname} target="_blank" rel="noreferrer" className="rounded p-2 text-muted-foreground hover:bg-secondary"><ExternalLink className="size-4" /></a><button onClick={() => void removeAttachment(attachment)} className="rounded p-2 text-muted-foreground hover:text-destructive"><Trash2 className="size-4" /></button></div>) : <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-xs text-muted-foreground">Arrastra archivos aquí o usa «Añadir»</div>}
+                    </div>
+                  </section>}
+                </div>
+                <div className="flex items-center justify-between border-t border-border px-4 sm:px-6 py-3">
+                  <button onClick={() => remove(selected.id)} className="flex items-center gap-2 text-sm text-destructive hover:underline"><Trash2 className="size-4" /> Eliminar</button>
+                  <button onClick={() => setSelected(null)} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Listo</button>
+                </div>
+              </div>
+              <div className={`${showComments ? 'max-h-[50vh] sm:max-h-none' : 'max-h-0 sm:max-h-none'} sm:flex sm:w-[340px] sm:shrink-0 sm:flex-col overflow-hidden sm:border-l sm:border-border transition-all duration-300`}>
+                <CommentsSection taskId={selected.id} />
+              </div>
+            </div>
+          </div>
+        </div>
+    )}
+    </main>
+    <ClientDialog open={clientDialog.open} onClose={() => setClientDialog(v => ({ ...v, open: false }))} onSave={handleClientSave} initialData={clientDialog.data ? { name: clientDialog.data.name, email: clientDialog.data.email, company: clientDialog.data.company } : undefined} title={clientDialog.mode === 'add' ? 'Nuevo cliente' : 'Editar cliente'} />
+    <SpaceDialog open={spaceDialog.open} onClose={() => setSpaceDialog(v => ({ ...v, open: false }))} onSave={handleSpaceSave} initialData={spaceDialog.data ? { name: spaceDialog.data.name, color: spaceDialog.data.color, secretPassword: spaceDialog.data.secretPassword ?? null } : undefined} title={spaceDialog.mode === 'add' ? 'Nuevo espacio' : 'Editar espacio'} />
+    <BoardDialog open={boardDialog.open} onClose={() => setBoardDialog(v => ({ ...v, open: false }))} onSave={handleBoardSave} initialData={boardDialog.data ? { name: boardDialog.data.name, type: boardDialog.data.type, paymentStatus: boardDialog.data.paymentStatus } : undefined} title={boardDialog.mode === 'add' ? 'Nuevo tablero' : 'Editar tablero'} />
+    <MilestoneDialog open={milestoneDialog.open} onClose={() => setMilestoneDialog(v => ({ ...v, open: false }))} onSave={handleMilestoneSave} initialData={milestoneDialog.data ? { name: milestoneDialog.data.name, color: milestoneDialog.data.color } : undefined} title={milestoneDialog.mode === 'add' ? 'Nuevo hito' : 'Editar hito'} />
+    {newListDialog.open && (
+      <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-3 sm:p-4" role="presentation" onClick={() => setNewListDialog({ open: false, name: '' })}>
+        <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-xl sm:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Nueva lista</p>
+            </div>
+            <button onClick={() => setNewListDialog({ open: false, name: '' })} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar nueva lista"><X className="size-4" /></button>
+          </div>
+          <div className="mt-4 space-y-3">
+            <label className="block text-sm font-medium text-foreground">Nombre</label>
+            <input value={newListDialog.name} onChange={e => setNewListDialog(v => ({ ...v, name: e.target.value }))} className="w-full rounded-xl border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary" placeholder="Ej. En revisión" autoFocus onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void submitBoardList() } }} />
+          </div>
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button onClick={() => setNewListDialog({ open: false, name: '' })} className="rounded-xl border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">Cancelar</button>
+            <button onClick={() => void submitBoardList()} className="rounded-xl bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" disabled={!newListDialog.name.trim()}>Crear lista</button>
+          </div>
+        </div>
+      </div>
+    )}
+    {listMoveDialog.open && listMoveDialog.listId && (
+      <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-3 sm:p-4" role="presentation" onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })}>
+        <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-xl sm:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Reordenar</p>
+              <h3 className="mt-1 text-lg font-semibold">Mover lista</h3>
+            </div>
+            <button onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar mover lista"><X className="size-4" /></button>
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground">Elige la posición exacta para esta lista dentro del tablero.</p>
+          <div className="mt-4 space-y-3">
+            <label className="block text-sm font-medium text-foreground">Posición</label>
+            <select value={Math.min(Math.max(listMoveDialog.position, 1), boardLists.length)} onChange={e => setListMoveDialog(v => ({ ...v, position: Number(e.target.value) }))} className="w-full rounded-xl border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary">
+              {boardLists.map((list, index) => (
+                <option key={list.id} value={index + 1}>{`#${index + 1} · ${list.name}`}</option>
+              ))}
+            </select>
+          </div>
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })} className="rounded-xl border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">Cancelar</button>
+            <button onClick={() => { if (listMoveDialog.listId) void moveBoardListByModal(listMoveDialog.listId, Math.max(0, listMoveDialog.position - 1)) }} className="rounded-xl bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Mover lista</button>
+          </div>
+        </div>
+      </div>
+    )}
+    {budgetOpen && activeBoard && <BudgetPanel boardId={activeBoard} onClose={() => setBudgetOpen(false)} />}
+    {spaceSecretsOpen && activeSpace && <SpaceSecretsPanel spaceId={activeSpace} onClose={() => setSpaceSecretsOpen(false)} />}
+    <ConfirmDialog open={confirmDialog.open} title={confirmDialog.title} message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onCancel={() => setConfirmDialog(v => ({ ...v, open: false }))} />
+    <ContactDialog open={contactDialog.open} onClose={() => setContactDialog(v => ({ ...v, open: false }))} onSave={handleContactSave} initialData={contactDialog.data ? { name: contactDialog.data.name, email: contactDialog.data.email, phone: contactDialog.data.phone, company: contactDialog.data.company, position: contactDialog.data.position, address: contactDialog.data.address, website: contactDialog.data.website, notes: contactDialog.data.notes } : undefined} title={contactDialog.mode === 'add' ? 'Nuevo contacto' : 'Editar contacto'} />
+    {archiveOpen && <ArchivePanel boards={boards} onClose={() => setArchiveOpen(false)} onUpdate={updateBoardPaymentStatus} />}
+  </>
+}
+
