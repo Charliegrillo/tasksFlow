@@ -377,31 +377,31 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5">
                 <SlidersHorizontal className="size-4 text-muted-foreground" />
-                <select value={filter} onChange={e => setFilter(e.target.value as TaskPriority | 'all')} className="bg-transparent text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por prioridad">
-                  <option value="all">Prioridad</option>
-                  <option value="high">Alta</option>
-                  <option value="medium">Media</option>
-                  <option value="low">Baja</option>
+                <select value={filter} onChange={e => setFilter(e.target.value as TaskPriority | 'all')} className="bg-card text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por prioridad">
+                  <option value="all" className="bg-card text-foreground">Prioridad</option>
+                  <option value="high" className="bg-card text-foreground">Alta</option>
+                  <option value="medium" className="bg-card text-foreground">Media</option>
+                  <option value="low" className="bg-card text-foreground">Baja</option>
                 </select>
                 {filter !== 'all' && <button onClick={() => setFilter('all')} className="ml-1 rounded-full bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
               </div>
 
               <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5">
-                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as TaskStatus | 'all')} className="bg-transparent text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por estado">
-                  <option value="all">Estado</option>
-                  <option value="backlog">Backlog</option>
-                  <option value="progress">En progreso</option>
-                  <option value="review">En revisión</option>
-                  <option value="done">Completado</option>
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as TaskStatus | 'all')} className="bg-card text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por estado">
+                  <option value="all" className="bg-card text-foreground">Estado</option>
+                  <option value="backlog" className="bg-card text-foreground">Backlog</option>
+                  <option value="progress" className="bg-card text-foreground">En progreso</option>
+                  <option value="review" className="bg-card text-foreground">En revisión</option>
+                  <option value="done" className="bg-card text-foreground">Completado</option>
                 </select>
                 {filterStatus !== 'all' && <button onClick={() => setFilterStatus('all')} className="ml-1 rounded-full bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
               </div>
 
               <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5">
-                <select value={filterMilestone} onChange={e => setFilterMilestone(e.target.value === 'all' || e.target.value === 'none' ? e.target.value : Number(e.target.value))} className="bg-transparent text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por hito">
-                  <option value="all">Hito</option>
-                  {milestones.map(ms => <option key={ms.id} value={ms.id}>{ms.name}</option>)}
-                  <option value="none">Sin hito</option>
+                <select value={filterMilestone} onChange={e => setFilterMilestone(e.target.value === 'all' || e.target.value === 'none' ? e.target.value : Number(e.target.value))} className="bg-card text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por hito">
+                  <option value="all" className="bg-card text-foreground">Hito</option>
+                  {milestones.map(ms => <option key={ms.id} value={ms.id} className="bg-card text-foreground">{ms.name}</option>)}
+                  <option value="none" className="bg-card text-foreground">Sin hito</option>
                 </select>
                 {filterMilestone !== 'all' && <button onClick={() => setFilterMilestone(selectedMilestoneId ?? resolvedMilestoneId ?? 'all')} className="ml-1 rounded-full bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
               </div>
