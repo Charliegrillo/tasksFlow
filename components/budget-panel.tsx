@@ -77,10 +77,10 @@ export function BudgetPanel({ boardId, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-4" role="presentation" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-border bg-card p-3 shadow-xl sm:p-4 md:p-6">
+      <div onClick={e => e.stopPropagation()} className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-sm border border-border bg-card p-3 shadow-xl sm:p-4 md:p-6">
         <div className="flex items-start justify-between gap-3 border-b border-border pb-3 md:gap-4 md:pb-4">
           <div className="flex items-center gap-2 md:gap-3">
-            <div className="grid size-9 place-items-center rounded-xl bg-primary/10 md:size-10"><DollarSign className="size-4 text-primary md:size-5" /></div>
+            <div className="grid size-9 place-items-center rounded-sm bg-primary/10 md:size-10"><DollarSign className="size-4 text-primary md:size-5" /></div>
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground md:text-[10px]">Presupuesto</p>
               <h2 className="mt-1 text-base font-semibold md:text-xl">Presupuesto del Tablero</h2>
@@ -89,13 +89,13 @@ export function BudgetPanel({ boardId, onClose }: Props) {
           </div>
 
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-lg bg-primary px-2.5 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 md:px-3 md:text-sm"><Download className="size-3.5 md:size-4" /> Exportar</button>
-            <button onClick={onClose} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar"><X className="size-4" /></button>
+            <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-sm bg-primary px-2.5 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 md:px-3 md:text-sm"><Download className="size-3.5 md:size-4" /> Exportar</button>
+            <button onClick={onClose} className="rounded-sm p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar"><X className="size-4" /></button>
           </div>
         </div>
 
         <div className="mt-3 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1 md:mt-5 md:gap-5">
-          <div className="rounded-2xl border border-border bg-background/60 p-3 md:p-4">
+          <div className="rounded-sm border border-border bg-background/60 p-3 md:p-4">
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:text-[10px]">Identificación</p>
@@ -116,33 +116,33 @@ export function BudgetPanel({ boardId, onClose }: Props) {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-background/60 p-3 md:p-4">
+          <div className="rounded-sm border border-border bg-background/60 p-3 md:p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:text-[10px]">Ítems del presupuesto</p>
-              <button onClick={() => setShowAdd(true)} className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-2 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 md:px-3 md:text-xs"><Plus className="size-3" /> Agregar</button>
+              <button onClick={() => setShowAdd(true)} className="inline-flex items-center gap-1 rounded-sm bg-primary px-2.5 py-2 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 md:px-3 md:text-xs"><Plus className="size-3" /> Agregar</button>
             </div>
 
             {showAdd && (
-              <div className="mt-3 rounded-xl border border-border bg-background p-3">
+              <div className="mt-3 rounded-sm border border-border bg-background p-3">
                 <div className="flex flex-col gap-2 md:flex-row">
-                  <select value={form.type} onChange={e => setForm(v => ({ ...v, type: e.target.value as BudgetItem['type'] }))} className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm outline-none">
+                  <select value={form.type} onChange={e => setForm(v => ({ ...v, type: e.target.value as BudgetItem['type'] }))} className="rounded-sm border border-border bg-background px-2 py-1.5 text-sm outline-none">
                     <option value="task">Tarea</option>
                     <option value="document">Documento</option>
                     <option value="image">Imagen</option>
                     <option value="other">Otro</option>
                   </select>
-                  <input value={form.description} onChange={e => setForm(v => ({ ...v, description: e.target.value }))} placeholder="Descripción..." className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary" autoFocus />
-                  <input type="number" value={form.amount || ''} onChange={e => setForm(v => ({ ...v, amount: Number(e.target.value) }))} placeholder="$" className="w-24 rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary" />
+                  <input value={form.description} onChange={e => setForm(v => ({ ...v, description: e.target.value }))} placeholder="Descripción..." className="flex-1 rounded-sm border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary" autoFocus />
+                  <input type="number" value={form.amount || ''} onChange={e => setForm(v => ({ ...v, amount: Number(e.target.value) }))} placeholder="$" className="w-24 rounded-sm border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-primary" />
                 </div>
                 <div className="mt-2 flex justify-end gap-2">
-                  <button onClick={() => { setShowAdd(false); setForm({ type: 'task', description: '', amount: 0 }) }} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary">Cancelar</button>
-                  <button onClick={handleAddItem} disabled={!form.description.trim()} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">Agregar</button>
+                  <button onClick={() => { setShowAdd(false); setForm({ type: 'task', description: '', amount: 0 }) }} className="rounded-sm border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary">Cancelar</button>
+                  <button onClick={handleAddItem} disabled={!form.description.trim()} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">Agregar</button>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="overflow-hidden rounded-sm border border-border bg-card">
             <div className="max-h-[28vh] overflow-auto">
               <table className="w-full min-w-[520px] border-collapse text-left">
                 <thead className="bg-secondary/80">
@@ -172,7 +172,7 @@ export function BudgetPanel({ boardId, onClose }: Props) {
           </div>
 
           <div className="grid gap-3 md:grid-cols-[1.3fr_0.7fr] md:gap-4">
-            <div className="rounded-xl border border-border bg-background/60 p-3 md:p-4">
+            <div className="rounded-sm border border-border bg-background/60 p-3 md:p-4">
               <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:text-[10px]">Información de pago</p>
               <div className="mt-3 space-y-2 text-sm text-foreground">
                 <div className="flex justify-between gap-4"><span className="text-muted-foreground">Banco</span><span className="font-medium">Banco de México</span></div>
@@ -182,7 +182,7 @@ export function BudgetPanel({ boardId, onClose }: Props) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-border bg-background/60 p-3 md:p-4">
+            <div className="rounded-sm border border-border bg-background/60 p-3 md:p-4">
               <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:text-[10px]">Totales</p>
               <div className="mt-3 space-y-2 text-sm">
                 <div className="flex items-center justify-between"><span className="text-muted-foreground">Subtotal</span><span className="font-medium text-foreground">${subtotal.toLocaleString()}</span></div>
@@ -194,15 +194,15 @@ export function BudgetPanel({ boardId, onClose }: Props) {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-background/60 p-3 md:p-4">
+          <div className="rounded-sm border border-border bg-background/60 p-3 md:p-4">
             <label className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground md:text-xs">Notas del proyecto</label>
             {editingNotes ? (
               <div className="mt-2">
-                <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" autoFocus />
-                <button onClick={saveNotes} className="mt-2 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">Guardar</button>
+                <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" autoFocus />
+                <button onClick={saveNotes} className="mt-2 rounded-sm bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">Guardar</button>
               </div>
             ) : (
-              <p onClick={() => setEditingNotes(true)} className="mt-2 cursor-pointer rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted-foreground hover:bg-secondary">{notes || 'Click para agregar notas del proyecto...'}</p>
+              <p onClick={() => setEditingNotes(true)} className="mt-2 cursor-pointer rounded-sm border border-dashed border-border px-3 py-2 text-sm text-muted-foreground hover:bg-secondary">{notes || 'Click para agregar notas del proyecto...'}</p>
             )}
           </div>
 

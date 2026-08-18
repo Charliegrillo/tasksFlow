@@ -293,7 +293,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
                 sidebar.classList.toggle('-translate-x-full')
               }
             }}
-            className="rounded-lg border border-border bg-background/80 p-2 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground lg:hidden"
+            className="rounded-sm border border-border bg-background/80 p-2 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground lg:hidden"
             aria-label="Abrir menú"
           >
             <PanelLeftOpen className="size-5" />
@@ -303,7 +303,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
             <>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Reporte de Hito</p>
               <h1 className="mt-1 flex items-center gap-3 text-2xl font-semibold tracking-tight">
-                {activeMilestone && <span className={`size-3 rounded-full ${activeMilestone.color}`} />}
+                {activeMilestone && <span className={`size-3 rounded-sm ${activeMilestone.color}`} />}
                 {activeMilestone?.name ?? 'Hito'}
               </h1>
             </>
@@ -329,28 +329,28 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
       {isMilestoneView ? (
         <div className="px-5 py-6 md:px-10">
           <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-xl border border-border p-4 text-center">
+            <div className="rounded-sm border border-border p-4 text-center">
               <p className="text-2xl font-bold">{milestoneTasks.length}</p>
               <p className="mt-1 text-xs text-muted-foreground">Tareas</p>
             </div>
-            <div className="rounded-xl border border-border p-4 text-center">
+            <div className="rounded-sm border border-border p-4 text-center">
               <p className="text-2xl font-bold text-emerald-500">{milestoneTasks.filter(t => t.status === 'done').length}</p>
               <p className="mt-1 text-xs text-muted-foreground">Completadas</p>
             </div>
-            <div className="rounded-xl border border-border p-4 text-center">
+            <div className="rounded-sm border border-border p-4 text-center">
               <p className="text-2xl font-bold">{milestoneTasks.length ? Math.round(milestoneTasks.filter(t => t.status === 'done').length / milestoneTasks.length * 100) : 0}%</p>
               <p className="mt-1 text-xs text-muted-foreground">Progreso</p>
             </div>
           </div>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-border">
-            <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${milestoneTasks.length ? Math.round(milestoneTasks.filter(t => t.status === 'done').length / milestoneTasks.length * 100) : 0}%` }} />
+          <div className="mt-3 h-2 overflow-hidden rounded bg-border">
+            <div className="h-full rounded bg-emerald-500 transition-all" style={{ width: `${milestoneTasks.length ? Math.round(milestoneTasks.filter(t => t.status === 'done').length / milestoneTasks.length * 100) : 0}%` }} />
           </div>
           <div className="mt-8 flex flex-col gap-6">
             {milestoneBoards.map(board => {
               const boardTasks = milestoneTasks.filter(t => (t as Task & { boardId?: number }).boardId === board.id).sort((a, b) => a.position - b.position)
               const boardDone = boardTasks.filter(t => t.status === 'done').length
               return (
-                <div key={board.id} className="rounded-xl border border-border bg-card">
+                <div key={board.id} className="rounded-sm border border-border bg-card">
                   <div className="flex items-center justify-between border-b border-border px-4 py-3">
                     <h2 className="text-sm font-semibold">{board.name}</h2>
                     <span className="text-xs text-muted-foreground">{boardDone}/{boardTasks.length} completadas</span>
@@ -359,11 +359,11 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
                     {boardTasks.map(task => (
                       <button key={task.id} onClick={() => void selectTask(task)} className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-secondary/60">
                         <span className="flex items-center gap-3">
-                          <span className={`size-2 rounded-full ${task.priority === 'high' ? 'bg-red-500' : task.priority === 'medium' ? 'bg-yellow-500' : 'bg-emerald-500'}`} />
+                          <span className={`size-2 rounded-sm ${task.priority === 'high' ? 'bg-red-500' : task.priority === 'medium' ? 'bg-yellow-500' : 'bg-emerald-500'}`} />
                           <span className="text-sm font-medium">{task.title}</span>
                         </span>
                         <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span className="rounded-full bg-secondary px-2 py-0.5">{columns.find(c => c.id === task.status)?.title}</span>
+                          <span className="rounded-sm bg-secondary px-2 py-0.5">{columns.find(c => c.id === task.status)?.title}</span>
                           {task.dueDate && <span className={new Date(task.dueDate) < new Date() && task.status !== 'done' ? 'text-destructive font-medium' : ''}>{new Date(task.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}</span>}
                         </span>
                       </button>
@@ -386,11 +386,11 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <input value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border border-border bg-card pl-9 pr-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" placeholder="Buscar tareas..." />
+              <input value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-sm border border-border bg-card pl-9 pr-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" placeholder="Buscar tareas..." />
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5">
+              <div className="flex items-center gap-1.5 rounded-sm border border-border bg-card px-3 py-2.5">
                 <SlidersHorizontal className="size-4 text-muted-foreground" />
                 <select value={filter} onChange={e => setFilter(e.target.value as TaskPriority | 'all')} className="bg-card text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por prioridad">
                   <option value="all" className="bg-card text-foreground">Prioridad</option>
@@ -398,10 +398,10 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
                   <option value="medium" className="bg-card text-foreground">Media</option>
                   <option value="low" className="bg-card text-foreground">Baja</option>
                 </select>
-                {filter !== 'all' && <button onClick={() => setFilter('all')} className="ml-1 rounded-full bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
+                {filter !== 'all' && <button onClick={() => setFilter('all')} className="ml-1 rounded-sm bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
               </div>
 
-              <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5">
+              <div className="flex items-center gap-1.5 rounded-sm border border-border bg-card px-3 py-2.5">
                 <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as TaskStatus | 'all')} className="bg-card text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por estado">
                   <option value="all" className="bg-card text-foreground">Estado</option>
                   <option value="backlog" className="bg-card text-foreground">Backlog</option>
@@ -409,20 +409,20 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
                   <option value="review" className="bg-card text-foreground">En revisión</option>
                   <option value="done" className="bg-card text-foreground">Completado</option>
                 </select>
-                {filterStatus !== 'all' && <button onClick={() => setFilterStatus('all')} className="ml-1 rounded-full bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
+                {filterStatus !== 'all' && <button onClick={() => setFilterStatus('all')} className="ml-1 rounded-sm bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
               </div>
 
-              <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5">
+              <div className="flex items-center gap-1.5 rounded-sm border border-border bg-card px-3 py-2.5">
                 <select value={filterMilestone} onChange={e => setFilterMilestone(e.target.value === 'all' || e.target.value === 'none' ? e.target.value : Number(e.target.value))} className="bg-card text-sm font-medium text-foreground outline-none cursor-pointer" aria-label="Filtrar por hito">
                   <option value="all" className="bg-card text-foreground">Hito</option>
                   {milestones.map(ms => <option key={ms.id} value={ms.id} className="bg-card text-foreground">{ms.name}</option>)}
                   <option value="none" className="bg-card text-foreground">Sin hito</option>
                 </select>
-                {filterMilestone !== 'all' && <button onClick={() => setFilterMilestone(selectedMilestoneId ?? resolvedMilestoneId ?? 'all')} className="ml-1 rounded-full bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
+                {filterMilestone !== 'all' && <button onClick={() => setFilterMilestone(selectedMilestoneId ?? resolvedMilestoneId ?? 'all')} className="ml-1 rounded-sm bg-primary/10 p-0.5 text-primary hover:bg-primary/20"><X className="size-3" /></button>}
               </div>
 
               {(search || filter !== 'all' || filterStatus !== 'all' || (filterMilestone !== 'all' && filterMilestone !== selectedMilestoneId && filterMilestone !== resolvedMilestoneId)) && (
-                <button onClick={clearFilters} className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/20">
+                <button onClick={clearFilters} className="flex items-center gap-1.5 rounded-sm bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/20">
                   <X className="size-3.5" />
                   Limpiar
                 </button>
@@ -430,23 +430,23 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
             </div>
 
             <div className="flex items-center gap-2">
-              <button onClick={() => setView(view === 'board' ? 'list' : 'board')} className="rounded-lg border border-border p-2.5 text-muted-foreground hover:bg-secondary" aria-label="Cambiar vista">{view === 'board' ? <List className="size-4" /> : <LayoutGrid className="size-4" />}</button>
-              {activeBoard && <button onClick={() => setBudgetOpen(true)} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary"><DollarSign className="size-4" /> Presupuesto</button>}
+              <button onClick={() => setView(view === 'board' ? 'list' : 'board')} className="rounded-sm border border-border p-2.5 text-muted-foreground hover:bg-secondary" aria-label="Cambiar vista">{view === 'board' ? <List className="size-4" /> : <LayoutGrid className="size-4" />}</button>
+              {activeBoard && <button onClick={() => setBudgetOpen(true)} className="flex items-center gap-2 rounded-sm border border-border px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary"><DollarSign className="size-4" /> Presupuesto</button>}
             </div>
           </div>
-          {view === 'list' ? <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card">{visible.map(task => <button key={task.id} onClick={() => void selectTask(task)} className="flex w-full items-center justify-between border-b border-border px-4 py-4 text-left last:border-0 hover:bg-secondary/60"><span><span className="flex items-center gap-2 text-sm font-medium">{task.title}<span className="inline-flex items-center gap-1 text-xs font-normal text-muted-foreground"><Paperclip className="size-3" />{attachmentCounts[task.id] ?? 0}</span></span><span className="text-xs text-muted-foreground">{columns.find(c => c.id === task.status)?.title} · {priorityLabels[task.priority]}</span>{task.dueDate && <span className={`ml-2 text-xs ${new Date(task.dueDate) < new Date() && task.status !== 'done' ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>{new Date(task.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}</span>}</span></button>)}</div> : <div className="mt-8 flex items-start gap-5 overflow-x-auto pb-4 min-h-screen">{columns.map(column => <div key={column.id} className={`flex w-[290px] min-w-[290px] flex-col rounded-xl p-2 transition-colors ${dragOver === column.id ? 'bg-secondary/70' : ''}`} onDragOver={e => { e.preventDefault(); setDragOver(column.id); const colTasks = visible.filter(t => t.status === column.id && t.id !== draggedId); let idx = colTasks.length; const articles = e.currentTarget.querySelectorAll('article'); for (let i = 0; i < articles.length; i++) { const r = articles[i].getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) { idx = i; break } } setDropIndex(idx) }} onDragLeave={() => { setDragOver(null); setDropIndex(null) }} onDrop={e => { e.preventDefault(); if (draggedId !== null) { const colTasks = visible.filter(t => t.status === column.id && t.id !== draggedId); const rect = e.currentTarget.getBoundingClientRect(); const y = e.clientY - rect.top; let pos = colTasks.length; const articles = e.currentTarget.querySelectorAll('article'); for (let i = 0; i < articles.length; i++) { const articleRect = articles[i].getBoundingClientRect(); if (y < articleRect.top + articleRect.height / 2) { pos = i; break } } void move(draggedId, column.id, pos) } setDraggedId(null); setDragOver(null); setDropIndex(null) }}><div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><span className={`size-2.5 rounded-full ${column.color}`} /><h2 className="text-sm font-semibold">{column.title}</h2><span className="rounded-md bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">{visible.filter(t => t.status === column.id).length}</span></div><div className="relative flex items-center gap-1.5"><button onClick={e => { e.stopPropagation(); setMenu(menu === column.id ? null : column.id) }} className="rounded-lg border border-border bg-background p-1.5 text-muted-foreground transition hover:bg-secondary" aria-label={`Más opciones ${column.title}`}><MoreHorizontal className="size-3.5" /></button>{menu === column.id && <div className="absolute right-0 top-10 z-10 w-44 rounded-lg border border-border bg-card p-1 shadow-lg"><button onClick={e => { e.stopPropagation(); if (column.dbId) setListMoveDialog({ open: true, listId: column.dbId, position: boardLists.findIndex(list => list.id === column.dbId) + 1 }); setMenu(null) }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-secondary"><MoveHorizontal className="size-4" /> Reordenar</button><div className="my-1 h-px bg-border" /><button onClick={e => { e.stopPropagation(); void removeBoardList(column); setMenu(null) }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-destructive hover:bg-secondary"><Trash2 className="size-4" /> Eliminar lista</button></div>}</div></div><div className="flex min-h-0 flex-1 flex-col gap-3">{loading ? <p className="text-sm text-muted-foreground">Cargando...</p> : visible.filter(t => t.status === column.id).map((task, taskIdx) => <span key={task.id}><span className={`block h-0.5 rounded bg-primary transition-all ${dragOver === column.id && dropIndex === taskIdx && draggedId !== task.id ? 'opacity-100' : 'opacity-0'}`} /><article draggable onDragStart={e => { e.stopPropagation(); setDraggedId(task.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(task.id)) }} onDragEnd={() => { setDraggedId(null); setDragOver(null); setDropIndex(null) }} onClick={() => void selectTask(task)} className={`cursor-grab rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/50 active:cursor-grabbing ${draggedId === task.id ? 'opacity-50' : ''}`}><div className="flex items-start justify-between gap-3"><h3 className="text-sm font-medium leading-5"><span className="flex items-center gap-1.5">{task.title}<span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground"><Paperclip className="size-3" /> Adjuntos · {attachmentCounts[task.id] ?? 0}</span></span></h3><span className={`size-2 shrink-0 rounded-full ${task.priority === 'high' ? 'bg-destructive' : task.priority === 'medium' ? 'bg-amber-500' : 'bg-muted-foreground'}`} /></div><p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{task.description || 'Sin descripción todavía.'}</p><div className="mt-4 flex items-center justify-between text-xs text-muted-foreground"><span>{task.assignee}</span><span className={task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done' ? 'text-destructive font-medium' : ''}>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Sin fecha'}</span></div></article></span>)}</div><span className={`block h-0.5 rounded bg-primary transition-all ${dragOver === column.id && dropIndex === visible.filter(t => t.status === column.id).length && draggedId !== null ? 'opacity-100' : 'opacity-0'}`} />{addingToColumn === column.id ? <div className="mt-3 flex flex-col gap-2"><input autoFocus value={columnInputs[column.id] ?? ''} onChange={e => setColumnInputs(v => ({ ...v, [column.id]: e.target.value }))} onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); void addTask(column.id) } if (e.key === 'Escape') setAddingToColumn(null) }} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary" placeholder="Título de la tarjeta..." /><div className="flex gap-2"><button onClick={() => void addTask(column.id)} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Añadir</button><button onClick={() => setAddingToColumn(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary">Cancelar</button></div></div> : <button onClick={() => { setAddingToColumn(column.id); setColumnInputs(v => ({ ...v, [column.id]: '' })) }} className="mt-auto flex w-full items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-secondary"><Plus className="size-4" /> Añadir tarjeta</button>}</div>)}<button onClick={() => void addBoardList()} className="flex h-[40px] min-w-[290px] shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:bg-secondary/50 hover:text-foreground"><Plus className="size-4" /> Añadir lista</button></div>}
+          {view === 'list' ? <div className="mt-8 overflow-hidden rounded-sm border border-border bg-card">{visible.map(task => <button key={task.id} onClick={() => void selectTask(task)} className="flex w-full items-center justify-between border-b border-border px-4 py-4 text-left last:border-0 hover:bg-secondary/60"><span><span className="flex items-center gap-2 text-sm font-medium">{task.title}<span className="inline-flex items-center gap-1 text-xs font-normal text-muted-foreground"><Paperclip className="size-3" />{attachmentCounts[task.id] ?? 0}</span></span><span className="text-xs text-muted-foreground">{columns.find(c => c.id === task.status)?.title} · {priorityLabels[task.priority]}</span>{task.dueDate && <span className={`ml-2 text-xs ${new Date(task.dueDate) < new Date() && task.status !== 'done' ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>{new Date(task.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}</span>}</span></button>)}</div> : <div className="mt-8 flex items-start gap-5 overflow-x-auto pb-4 min-h-screen">{columns.map(column => <div key={column.id} className={`flex w-[290px] min-w-[290px] flex-col rounded-sm p-2 transition-colors ${dragOver === column.id ? 'bg-secondary/70' : ''}`} onDragOver={e => { e.preventDefault(); setDragOver(column.id); const colTasks = visible.filter(t => t.status === column.id && t.id !== draggedId); let idx = colTasks.length; const articles = e.currentTarget.querySelectorAll('article'); for (let i = 0; i < articles.length; i++) { const r = articles[i].getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) { idx = i; break } } setDropIndex(idx) }} onDragLeave={() => { setDragOver(null); setDropIndex(null) }} onDrop={e => { e.preventDefault(); if (draggedId !== null) { const colTasks = visible.filter(t => t.status === column.id && t.id !== draggedId); const rect = e.currentTarget.getBoundingClientRect(); const y = e.clientY - rect.top; let pos = colTasks.length; const articles = e.currentTarget.querySelectorAll('article'); for (let i = 0; i < articles.length; i++) { const articleRect = articles[i].getBoundingClientRect(); if (y < articleRect.top + articleRect.height / 2) { pos = i; break } } void move(draggedId, column.id, pos) } setDraggedId(null); setDragOver(null); setDropIndex(null) }}><div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><span className={`size-2.5 rounded-sm ${column.color}`} /><h2 className="text-sm font-semibold">{column.title}</h2><span className="rounded bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">{visible.filter(t => t.status === column.id).length}</span></div><div className="relative flex items-center gap-1.5"><button onClick={e => { e.stopPropagation(); setMenu(menu === column.id ? null : column.id) }} className="rounded border border-border bg-background p-1.5 text-muted-foreground transition hover:bg-secondary" aria-label={`Más opciones ${column.title}`}><MoreHorizontal className="size-3.5" /></button>{menu === column.id && <div className="absolute right-0 top-10 z-10 w-44 rounded border border-border bg-card p-1 shadow-lg"><button onClick={e => { e.stopPropagation(); if (column.dbId) setListMoveDialog({ open: true, listId: column.dbId, position: boardLists.findIndex(list => list.id === column.dbId) + 1 }); setMenu(null) }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-foreground hover:bg-secondary"><MoveHorizontal className="size-4" /> Reordenar</button><div className="my-1 h-px bg-border" /><button onClick={e => { e.stopPropagation(); void removeBoardList(column); setMenu(null) }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-destructive hover:bg-secondary"><Trash2 className="size-4" /> Eliminar lista</button></div>}</div></div><div className="flex min-h-0 flex-1 flex-col gap-3">{loading ? <p className="text-sm text-muted-foreground">Cargando...</p> : visible.filter(t => t.status === column.id).map((task, taskIdx) => <span key={task.id}><span className={`block h-0.5 rounded bg-primary transition-all ${dragOver === column.id && dropIndex === taskIdx && draggedId !== task.id ? 'opacity-100' : 'opacity-0'}`} /><article draggable onDragStart={e => { e.stopPropagation(); setDraggedId(task.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(task.id)) }} onDragEnd={() => { setDraggedId(null); setDragOver(null); setDropIndex(null) }} onClick={() => void selectTask(task)} className={`cursor-grab rounded border border-border bg-card p-4 shadow-sm transition hover:border-primary/50 active:cursor-grabbing ${draggedId === task.id ? 'opacity-50' : ''}`}><div className="flex items-start justify-between gap-3"><h3 className="text-sm font-medium leading-5"><span className="flex items-center gap-1.5">{task.title}<span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground"><Paperclip className="size-3" /> Adjuntos · {attachmentCounts[task.id] ?? 0}</span></span></h3><span className={`size-2 shrink-0 rounded-sm ${task.priority === 'high' ? 'bg-destructive' : task.priority === 'medium' ? 'bg-amber-500' : 'bg-muted-foreground'}`} /></div><p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{task.description || 'Sin descripción todavía.'}</p><div className="mt-4 flex items-center justify-between text-xs text-muted-foreground"><span>{task.assignee}</span><span className={task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done' ? 'text-destructive font-medium' : ''}>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Sin fecha'}</span></div></article></span>)}</div><span className={`block h-0.5 rounded bg-primary transition-all ${dragOver === column.id && dropIndex === visible.filter(t => t.status === column.id).length && draggedId !== null ? 'opacity-100' : 'opacity-0'}`} />{addingToColumn === column.id ? <div className="mt-3 flex flex-col gap-2"><input autoFocus value={columnInputs[column.id] ?? ''} onChange={e => setColumnInputs(v => ({ ...v, [column.id]: e.target.value }))} onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); void addTask(column.id) } if (e.key === 'Escape') setAddingToColumn(null) }} className="w-full rounded border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary" placeholder="Título de la tarjeta..." /><div className="flex gap-2"><button onClick={() => void addTask(column.id)} className="rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Añadir</button><button onClick={() => setAddingToColumn(null)} className="rounded border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary">Cancelar</button></div></div> : <button onClick={() => { setAddingToColumn(column.id); setColumnInputs(v => ({ ...v, [column.id]: '' })) }} className="mt-auto flex w-full items-center gap-2 rounded border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-secondary"><Plus className="size-4" /> Añadir tarjeta</button>}</div>)}<button onClick={() => void addBoardList()} className="flex h-[40px] min-w-[290px] shrink-0 items-center justify-center gap-2 rounded border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:bg-secondary/50 hover:text-foreground"><Plus className="size-4" /> Añadir lista</button></div>}
         </div>
       )}
     </section>
     {selected && (
         <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-background/70 p-0 sm:p-4" role="presentation" onClick={() => setSelected(null)}>
-          <div onClick={e => e.stopPropagation()} className="flex h-[85vh] sm:h-[90vh] w-full sm:max-w-4xl flex-col rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-xl overflow-hidden">
+          <div onClick={e => e.stopPropagation()} className="flex h-[85vh] sm:h-[90vh] w-full sm:max-w-4xl flex-col rounded-t-2xl sm:rounded-sm border border-border bg-card shadow-xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-border px-4 sm:px-6 py-3 sm:py-4">
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground">Detalle de tarea</p>
                 <h2 className="mt-0.5 text-base sm:text-lg font-semibold truncate">{selected.title}</h2>
               </div>
-              <button onClick={() => setSelected(null)} className="shrink-0 rounded-lg p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar"><X className="size-4" /></button>
+              <button onClick={() => setSelected(null)} className="shrink-0 rounded-sm p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar"><X className="size-4" /></button>
             </div>
             <div className="flex min-h-0 flex-1 flex-col sm:flex-row overflow-hidden">
               <div className="flex flex-1 flex-col overflow-hidden">
@@ -458,10 +458,10 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
                 </div>
                 <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5">
                   {detailTab === 'details' && <>
-                    <div><h3 className="mb-2 text-sm font-semibold">Descripción</h3><textarea value={selected.description} onChange={e => void updateTaskDescription(selected.id, e.target.value)} placeholder="Sin descripción todavía..." className="min-h-[80px] w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm leading-6 outline-none focus:border-primary" /></div>
+                    <div><h3 className="mb-2 text-sm font-semibold">Descripción</h3><textarea value={selected.description} onChange={e => void updateTaskDescription(selected.id, e.target.value)} placeholder="Sin descripción todavía..." className="min-h-[80px] w-full resize-none rounded-sm border border-border bg-background px-3 py-2 text-sm leading-6 outline-none focus:border-primary" /></div>
                     <section className="mt-5 border-t border-border pt-5">
                       <h3 className="mb-3 text-sm font-semibold">Hito</h3>
-                      <select value={selected.milestoneId ?? ''} onChange={e => { const val = e.target.value ? Number(e.target.value) : null; void updateMilestoneOnTask(selected.id, val) }} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary">
+                      <select value={selected.milestoneId ?? ''} onChange={e => { const val = e.target.value ? Number(e.target.value) : null; void updateMilestoneOnTask(selected.id, val) }} className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary">
                         <option value="">Sin hito</option>
                         {milestones.map(ms => <option key={ms.id} value={ms.id}>{ms.name}</option>)}
                       </select>
@@ -469,24 +469,24 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
                     <section className="mt-5 border-t border-border pt-5">
                       <h3 className="mb-3 text-sm font-semibold">Fechas</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1"><label className="text-xs text-muted-foreground">Inicio</label><input type="date" value={selected.startDate ?? ''} onChange={e => updateTaskDates(selected.id, 'startDate', e.target.value || null)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" /></div>
-                        <div className="flex flex-col gap-1"><label className="text-xs text-muted-foreground">Vencimiento</label><input type="date" value={selected.dueDate ?? ''} onChange={e => updateTaskDates(selected.id, 'dueDate', e.target.value || null)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" /></div>
+                        <div className="flex flex-col gap-1"><label className="text-xs text-muted-foreground">Inicio</label><input type="date" value={selected.startDate ?? ''} onChange={e => updateTaskDates(selected.id, 'startDate', e.target.value || null)} className="rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" /></div>
+                        <div className="flex flex-col gap-1"><label className="text-xs text-muted-foreground">Vencimiento</label><input type="date" value={selected.dueDate ?? ''} onChange={e => updateTaskDates(selected.id, 'dueDate', e.target.value || null)} className="rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" /></div>
                       </div>
                     </section>
                   </>}
                   {detailTab === 'checklists' && <ChecklistSection taskId={selected.id} />}
                   {detailTab === 'attachments' && <section>
-                    <div className="flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-semibold"><Paperclip className="size-4" /> Adjuntos</h3><label className="cursor-pointer rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:bg-secondary"><span>{isUploading ? 'Subiendo...' : 'Añadir'}</span><input type="file" multiple className="sr-only" disabled={isUploading} onChange={e => { if (e.target.files) void uploadFiles(e.target.files); e.currentTarget.value = '' }} /></label></div>
+                    <div className="flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-semibold"><Paperclip className="size-4" /> Adjuntos</h3><label className="cursor-pointer rounded-sm border border-border px-3 py-1.5 text-sm font-medium hover:bg-secondary"><span>{isUploading ? 'Subiendo...' : 'Añadir'}</span><input type="file" multiple className="sr-only" disabled={isUploading} onChange={e => { if (e.target.files) void uploadFiles(e.target.files); e.currentTarget.value = '' }} /></label></div>
                     <p className="mt-4 text-xs font-semibold text-muted-foreground">Archivos ({attachments.length})</p>
                     {uploadError && <p role="alert" className="mt-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{uploadError}</p>}
                     <div className="mt-2 flex flex-col gap-2" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); void uploadFiles(e.dataTransfer.files) }}>
-                      {attachments.length ? attachments.filter(attachment => Boolean(attachment && attachment.name)).map(attachment => <div key={attachment.id} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5"><div className="grid size-10 shrink-0 place-items-center rounded-md bg-secondary text-xs font-bold uppercase">{attachment.name.split('.').pop() || 'FILE'}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{attachment.name}</p><p className="text-xs text-muted-foreground">Añadido: {new Date(attachment.createdAt).toLocaleString('es-ES')} · {(attachment.size / 1024).toFixed(0)} KB</p></div><a href={attachment.pathname} target="_blank" rel="noreferrer" className="rounded p-2 text-muted-foreground hover:bg-secondary"><ExternalLink className="size-4" /></a><button onClick={() => void removeAttachment(attachment)} className="rounded p-2 text-muted-foreground hover:text-destructive"><Trash2 className="size-4" /></button></div>) : <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-xs text-muted-foreground">Arrastra archivos aquí o usa «Añadir»</div>}
+                      {attachments.length ? attachments.filter(attachment => Boolean(attachment && attachment.name)).map(attachment => <div key={attachment.id} className="flex items-center gap-3 rounded-sm border border-border px-3 py-2.5"><div className="grid size-10 shrink-0 place-items-center rounded-md bg-secondary text-xs font-bold uppercase">{attachment.name.split('.').pop() || 'FILE'}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{attachment.name}</p><p className="text-xs text-muted-foreground">Añadido: {new Date(attachment.createdAt).toLocaleString('es-ES')} · {(attachment.size / 1024).toFixed(0)} KB</p></div><a href={attachment.pathname} target="_blank" rel="noreferrer" className="rounded p-2 text-muted-foreground hover:bg-secondary"><ExternalLink className="size-4" /></a><button onClick={() => void removeAttachment(attachment)} className="rounded p-2 text-muted-foreground hover:text-destructive"><Trash2 className="size-4" /></button></div>) : <div className="rounded-sm border border-dashed border-border px-4 py-6 text-center text-xs text-muted-foreground">Arrastra archivos aquí o usa «Añadir»</div>}
                     </div>
                   </section>}
                 </div>
                 <div className="flex items-center justify-between border-t border-border px-4 sm:px-6 py-3">
                   <button onClick={() => remove(selected.id)} className="flex items-center gap-2 text-sm text-destructive hover:underline"><Trash2 className="size-4" /> Eliminar</button>
-                  <button onClick={() => setSelected(null)} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Listo</button>
+                  <button onClick={() => setSelected(null)} className="rounded-sm bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Listo</button>
                 </div>
               </div>
               <div className={`${showComments ? 'flex flex-col h-[50vh] sm:h-auto' : 'hidden'} sm:flex sm:w-[340px] sm:shrink-0 sm:flex-col overflow-hidden sm:border-l sm:border-border transition-all duration-300`}>
@@ -503,46 +503,46 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
     <MilestoneDialog open={milestoneDialog.open} onClose={() => setMilestoneDialog(v => ({ ...v, open: false }))} onSave={handleMilestoneSave} initialData={milestoneDialog.data ? { name: milestoneDialog.data.name, color: milestoneDialog.data.color } : undefined} title={milestoneDialog.mode === 'add' ? 'Nuevo hito' : 'Editar hito'} />
     {newListDialog.open && (
       <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-3 sm:p-4" role="presentation" onClick={() => setNewListDialog({ open: false, name: '' })}>
-        <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-xl sm:p-5">
+        <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-sm border border-border bg-card p-4 shadow-xl sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Nueva lista</p>
             </div>
-            <button onClick={() => setNewListDialog({ open: false, name: '' })} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar nueva lista"><X className="size-4" /></button>
+            <button onClick={() => setNewListDialog({ open: false, name: '' })} className="rounded-sm p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar nueva lista"><X className="size-4" /></button>
           </div>
           <div className="mt-4 space-y-3">
             <label className="block text-sm font-medium text-foreground">Nombre</label>
-            <input value={newListDialog.name} onChange={e => setNewListDialog(v => ({ ...v, name: e.target.value }))} className="w-full rounded-xl border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary" placeholder="Ej. En revisión" autoFocus onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void submitBoardList() } }} />
+            <input value={newListDialog.name} onChange={e => setNewListDialog(v => ({ ...v, name: e.target.value }))} className="w-full rounded-sm border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary" placeholder="Ej. En revisión" autoFocus onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void submitBoardList() } }} />
           </div>
           <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button onClick={() => setNewListDialog({ open: false, name: '' })} className="rounded-xl border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">Cancelar</button>
-            <button onClick={() => void submitBoardList()} className="rounded-xl bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" disabled={!newListDialog.name.trim()}>Crear lista</button>
+            <button onClick={() => setNewListDialog({ open: false, name: '' })} className="rounded-sm border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">Cancelar</button>
+            <button onClick={() => void submitBoardList()} className="rounded-sm bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" disabled={!newListDialog.name.trim()}>Crear lista</button>
           </div>
         </div>
       </div>
     )}
     {listMoveDialog.open && listMoveDialog.listId && (
       <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-3 sm:p-4" role="presentation" onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })}>
-        <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-xl sm:p-5">
+        <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-sm border border-border bg-card p-4 shadow-xl sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Reordenar</p>
               <h3 className="mt-1 text-lg font-semibold">Mover lista</h3>
             </div>
-            <button onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar mover lista"><X className="size-4" /></button>
+            <button onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })} className="rounded-sm p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar mover lista"><X className="size-4" /></button>
           </div>
           <p className="mt-3 text-sm text-muted-foreground">Elige la posición exacta para esta lista dentro del tablero.</p>
           <div className="mt-4 space-y-3">
             <label className="block text-sm font-medium text-foreground">Posición</label>
-            <select value={Math.min(Math.max(listMoveDialog.position, 1), boardLists.length)} onChange={e => setListMoveDialog(v => ({ ...v, position: Number(e.target.value) }))} className="w-full rounded-xl border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary">
+            <select value={Math.min(Math.max(listMoveDialog.position, 1), boardLists.length)} onChange={e => setListMoveDialog(v => ({ ...v, position: Number(e.target.value) }))} className="w-full rounded-sm border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary">
               {boardLists.map((list, index) => (
                 <option key={list.id} value={index + 1}>{`#${index + 1} · ${list.name}`}</option>
               ))}
             </select>
           </div>
           <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })} className="rounded-xl border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">Cancelar</button>
-            <button onClick={() => { if (listMoveDialog.listId) void moveBoardListByModal(listMoveDialog.listId, Math.max(0, listMoveDialog.position - 1)) }} className="rounded-xl bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Mover lista</button>
+            <button onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })} className="rounded-sm border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">Cancelar</button>
+            <button onClick={() => { if (listMoveDialog.listId) void moveBoardListByModal(listMoveDialog.listId, Math.max(0, listMoveDialog.position - 1)) }} className="rounded-sm bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Mover lista</button>
           </div>
         </div>
       </div>

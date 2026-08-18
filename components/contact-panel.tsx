@@ -47,15 +47,15 @@ export function ContactPanel({ contacts, onAdd, onEdit, onDelete }: ContactPanel
   return (
     <div className="px-5 py-6 md:px-10">
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-border p-4 text-center">
+        <div className="rounded-sm border border-border p-4 text-center">
           <p className="text-2xl font-bold">{contacts.length}</p>
           <p className="mt-1 text-xs text-muted-foreground">Contactos</p>
         </div>
-        <div className="rounded-xl border border-border p-4 text-center">
+        <div className="rounded-sm border border-border p-4 text-center">
           <p className="text-2xl font-bold text-blue-500">{companies.length}</p>
           <p className="mt-1 text-xs text-muted-foreground">Empresas</p>
         </div>
-        <div className="rounded-xl border border-border p-4 text-center">
+        <div className="rounded-sm border border-border p-4 text-center">
           <p className="text-2xl font-bold text-emerald-500">{contacts.filter(c => c.email).length}</p>
           <p className="mt-1 text-xs text-muted-foreground">Con email</p>
         </div>
@@ -63,18 +63,18 @@ export function ContactPanel({ contacts, onAdd, onEdit, onDelete }: ContactPanel
 
       <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 flex-1 sm:flex-initial"><Search className="size-4 text-muted-foreground shrink-0" /><input value={search} onChange={e => setSearch(e.target.value)} className="w-full sm:w-48 bg-transparent text-sm outline-none placeholder:text-muted-foreground" placeholder="Buscar nombre, email, tel..." /></div>
-          <select value={filterCompany} onChange={e => setFilterCompany(e.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary w-full sm:w-auto"><option value="">Todas las empresas</option>{companies.map(c => <option key={c} value={c}>{c}</option>)}</select>
+          <div className="flex items-center gap-2 rounded-sm border border-border bg-card px-3 py-2 flex-1 sm:flex-initial"><Search className="size-4 text-muted-foreground shrink-0" /><input value={search} onChange={e => setSearch(e.target.value)} className="w-full sm:w-48 bg-transparent text-sm outline-none placeholder:text-muted-foreground" placeholder="Buscar nombre, email, tel..." /></div>
+          <select value={filterCompany} onChange={e => setFilterCompany(e.target.value)} className="rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary w-full sm:w-auto"><option value="">Todas las empresas</option>{companies.map(c => <option key={c} value={c}>{c}</option>)}</select>
           <span className="text-xs text-muted-foreground">{filtered.length} contactos{filterCompany ? ` en ${filterCompany}` : ''}</span>
         </div>
-        <button onClick={() => setContactDialog({ open: true, mode: 'add' })} className="flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="size-4" /> Nuevo contacto</button>
+        <button onClick={() => setContactDialog({ open: true, mode: 'add' })} className="flex items-center justify-center gap-2 rounded-sm bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="size-4" /> Nuevo contacto</button>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-card">
+      <div className="mt-4 overflow-x-auto rounded-sm border border-border bg-card">
         {paged.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <p className="text-sm">No se encontraron contactos</p>
-            <button onClick={() => setContactDialog({ open: true, mode: 'add' })} className="mt-3 flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-secondary"><Plus className="size-4" /> Crear contacto</button>
+            <button onClick={() => setContactDialog({ open: true, mode: 'add' })} className="mt-3 flex items-center gap-2 rounded-sm border border-border px-3 py-2 text-sm hover:bg-secondary"><Plus className="size-4" /> Crear contacto</button>
           </div>
         ) : (
           <table className="w-full">
@@ -142,14 +142,14 @@ export function ContactPanel({ contacts, onAdd, onEdit, onDelete }: ContactPanel
         <div className="mt-3 flex items-center justify-between">
           <p className="text-xs text-muted-foreground">Página {page} de {totalPages} ({filtered.length} resultados)</p>
           <div className="flex items-center gap-1">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-secondary disabled:opacity-50"><ChevronLeft className="size-4" /></button>
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="rounded-sm border border-border p-2 text-muted-foreground hover:bg-secondary disabled:opacity-50"><ChevronLeft className="size-4" /></button>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               const start = Math.max(1, Math.min(page - 2, totalPages - 4))
               const p = start + i
               if (p > totalPages) return null
-              return <button key={p} onClick={() => setPage(p)} className={`rounded-lg px-3 py-1.5 text-sm font-medium ${p === page ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary'}`}>{p}</button>
+              return <button key={p} onClick={() => setPage(p)} className={`rounded-sm px-3 py-1.5 text-sm font-medium ${p === page ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary'}`}>{p}</button>
             })}
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-secondary disabled:opacity-50"><ChevronRight className="size-4" /></button>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="rounded-sm border border-border p-2 text-muted-foreground hover:bg-secondary disabled:opacity-50"><ChevronRight className="size-4" /></button>
           </div>
         </div>
       )}

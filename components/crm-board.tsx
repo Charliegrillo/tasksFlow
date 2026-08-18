@@ -59,19 +59,19 @@ export function CrmBoard({ stages, deals, contacts, interactions, onAddDeal, onM
     <div className="px-5 py-6 md:px-10">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {stages.map(s => <span key={s.id} className={`h-2 w-8 rounded-full ${s.color}`} />)}
+          {stages.map(s => <span key={s.id} className={`h-2 w-8 rounded-sm ${s.color}`} />)}
           <span className="text-sm text-muted-foreground">{deals.length} deals</span>
         </div>
-        <button onClick={() => setStageDialog({ open: true })} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:bg-secondary"><Settings className="size-4" /> Gestionar etapas</button>
+        <button onClick={() => setStageDialog({ open: true })} className="flex items-center gap-2 rounded-sm border border-border px-3 py-2 text-sm text-muted-foreground hover:bg-secondary"><Settings className="size-4" /> Gestionar etapas</button>
       </div>
       <div className="mt-6 flex items-start gap-5 overflow-x-auto pb-4">
         {stages.map(stage => {
           const stageDeals = deals.filter(d => d.stageId === stage.id)
           return (
-            <div key={stage.id} onDragOver={e => handleDragOver(e, stage.id)} onDragLeave={() => setDragOverStage(null)} onDrop={e => handleDrop(e, stage.id)} className={`flex w-[300px] min-w-[300px] flex-col rounded-xl p-2 transition-colors ${dragOverStage === stage.id ? 'bg-secondary/70' : ''}`}>
+            <div key={stage.id} onDragOver={e => handleDragOver(e, stage.id)} onDragLeave={() => setDragOverStage(null)} onDrop={e => handleDrop(e, stage.id)} className={`flex w-[300px] min-w-[300px] flex-col rounded-sm p-2 transition-colors ${dragOverStage === stage.id ? 'bg-secondary/70' : ''}`}>
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className={`size-2.5 rounded-full ${stage.color}`} />
+                  <span className={`size-2.5 rounded-sm ${stage.color}`} />
                   <h3 className="text-sm font-semibold">{stage.name}</h3>
                   <span className="rounded-md bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">{stageDeals.length}</span>
                 </div>
@@ -84,7 +84,7 @@ export function CrmBoard({ stages, deals, contacts, interactions, onAddDeal, onM
                   </div>
                 ))}
               </div>
-              <button onClick={() => handleAddContactForDeal(stage.id)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary"><Plus className="size-4" /> Añadir deal</button>
+              <button onClick={() => handleAddContactForDeal(stage.id)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-sm border border-dashed border-border px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary"><Plus className="size-4" /> Añadir deal</button>
             </div>
           )
         })}

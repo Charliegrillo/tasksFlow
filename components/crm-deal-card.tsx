@@ -21,7 +21,7 @@ export function CrmDealCard({ deal, contact, interactions, onOpenDeal, onOpenInt
   if (!contact) return null
 
   return (
-    <div role="button" tabIndex={0} onClick={() => onOpenDeal(deal.id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenDeal(deal.id) } }} className="w-full rounded-xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-primary/40 hover:bg-secondary/40 cursor-pointer">
+    <div role="button" tabIndex={0} onClick={() => onOpenDeal(deal.id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenDeal(deal.id) } }} className="w-full rounded-sm border border-border bg-card p-4 text-left shadow-sm transition hover:border-primary/40 hover:bg-secondary/40 cursor-pointer">
       <div className="flex items-start justify-between">
         <div>
           <h3 className="text-sm font-semibold">{contact.name}</h3>
@@ -29,7 +29,7 @@ export function CrmDealCard({ deal, contact, interactions, onOpenDeal, onOpenInt
         </div>
         <button type="button" onClick={e => { e.stopPropagation(); onDeleteDeal(deal.id) }} className="rounded p-1 text-muted-foreground hover:text-destructive" aria-label="Eliminar deal"><Trash2 className="size-3.5" /></button>
       </div>
-      {deal.budgetAmount > 0 && <p className="mt-2 rounded-lg bg-secondary px-2 py-1 text-xs font-medium">${deal.budgetAmount.toLocaleString()}</p>}
+      {deal.budgetAmount > 0 && <p className="mt-2 rounded-sm bg-secondary px-2 py-1 text-xs font-medium">${deal.budgetAmount.toLocaleString()}</p>}
       {contact.email && <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><Mail className="size-3" />{contact.email}</p>}
       {contact.phone && <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><Phone className="size-3" />{contact.phone}</p>}
       {interactions.length > 0 && (
@@ -38,7 +38,7 @@ export function CrmDealCard({ deal, contact, interactions, onOpenDeal, onOpenInt
           {interactions.slice(0, 3).map(inter => {
             const Icon = typeIcons[inter.type]
             return (
-              <div key={inter.id} className="flex items-start gap-2 rounded-lg bg-secondary/50 px-2 py-1.5">
+              <div key={inter.id} className="flex items-start gap-2 rounded-sm bg-secondary/50 px-2 py-1.5">
                 <Icon className="mt-0.5 size-3 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-medium">{typeLabels[inter.type]}</p>
@@ -50,7 +50,7 @@ export function CrmDealCard({ deal, contact, interactions, onOpenDeal, onOpenInt
           })}
         </div>
       )}
-      <button type="button" onClick={e => { e.stopPropagation(); onOpenInteraction(deal.id) }} className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary"><Plus className="size-3" /> Interacción</button>
+      <button type="button" onClick={e => { e.stopPropagation(); onOpenInteraction(deal.id) }} className="mt-3 flex w-full items-center justify-center gap-1 rounded-sm border border-dashed border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary"><Plus className="size-3" /> Interacción</button>
     </div>
   )
 }

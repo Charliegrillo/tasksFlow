@@ -58,7 +58,7 @@ export function CommentsSection({ taskId }: Props) {
       <div className="flex flex-col gap-3 overflow-y-auto px-5 py-4" style={{ flex: '1 1 0', maxHeight: 'calc(90vh - 200px)' }}>
         {comments.map(comment => (
           <div key={comment.id} className="flex gap-2">
-            <div className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-[10px] font-bold text-muted-foreground">{getInitials(comment.author)}</div>
+            <div className="grid size-8 shrink-0 place-items-center rounded-sm bg-secondary text-[10px] font-bold text-muted-foreground">{getInitials(comment.author)}</div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{comment.author}</span>
@@ -66,7 +66,7 @@ export function CommentsSection({ taskId }: Props) {
               </div>
               {editingId === comment.id ? (
                 <div className="mt-1">
-                  <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows={2} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary resize-none" autoFocus />
+                  <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows={2} className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary resize-none" autoFocus />
                   <div className="mt-1 flex gap-2">
                     <button onClick={() => setEditingId(null)} className="rounded border border-border px-2 py-1 text-[10px] text-muted-foreground hover:bg-secondary">Cancelar</button>
                     <button onClick={() => handleUpdate(comment.id)} className="rounded bg-primary px-2 py-1 text-[10px] font-medium text-primary-foreground hover:bg-primary/90">Guardar</button>
@@ -89,11 +89,11 @@ export function CommentsSection({ taskId }: Props) {
 
       <div className="border-t border-border px-5 py-3">
         <div className="flex gap-2">
-          <div className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">U</div>
+          <div className="grid size-8 shrink-0 place-items-center rounded-sm bg-primary/10 text-[10px] font-bold text-primary">U</div>
           <div className="flex-1">
-            <textarea value={newComment} onChange={e => setNewComment(e.target.value)} rows={2} placeholder="Escribe un comentario..." className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary resize-none" onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void handleAdd() } }} />
+            <textarea value={newComment} onChange={e => setNewComment(e.target.value)} rows={2} placeholder="Escribe un comentario..." className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary resize-none" onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void handleAdd() } }} />
             <div className="mt-1 flex justify-end">
-              <button onClick={handleAdd} disabled={!newComment.trim()} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">Guardar</button>
+              <button onClick={handleAdd} disabled={!newComment.trim()} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">Guardar</button>
             </div>
           </div>
         </div>

@@ -133,15 +133,15 @@ export function Sidebar({
   const visibleSpaces = activeClient ? effectiveSpaces.filter(s => s.clientId === activeClient) : effectiveSpaces
   const visibleBoards = activeSpace ? effectiveBoards.filter(b => b.spaceId === activeSpace) : effectiveBoards
   const sectionLabelClass = 'flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground'
-  const sectionItemClass = 'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[11px] font-medium transition-colors'
-  const entryClass = 'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors'
+  const sectionItemClass = 'flex w-full items-center justify-between rounded-sm px-3 py-2 text-left text-[11px] font-medium transition-colors'
+  const entryClass = 'group flex items-center gap-2 rounded-sm px-2.5 py-2 text-sm font-medium transition-colors'
 
   return (
     <aside className={`fixed inset-y-0 left-0 z-40 border-r border-border bg-card/95 backdrop-blur-sm shadow-[0_0_0_1px_rgba(15,23,42,0.02)] transition-all duration-300 flex flex-col -translate-x-full lg:translate-x-0 ${collapsed ? 'w-24' : 'w-72'}`}>
       <div className="flex h-full w-full flex-col px-3 py-4">
         <div className="flex items-center justify-between gap-2 border-b border-border/80 pb-4">
           <div className={`flex items-center gap-3 ${collapsed ? 'justify-center w-full' : ''}`}>
-            <div className="grid size-9 place-items-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm ring-1 ring-primary/20">
+            <div className="grid size-9 place-items-center rounded-sm bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm ring-1 ring-primary/20">
               <Sparkles className="size-4" />
             </div>
             {!collapsed && <span className="text-lg font-semibold tracking-tight">Taskflow</span>}
@@ -149,7 +149,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={() => setCollapsed(prev => !prev)}
-            className="rounded-lg border border-border bg-background/80 p-1.5 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground"
+            className="rounded-sm border border-border bg-background/80 p-1.5 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground"
             aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
           >
             {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
@@ -157,13 +157,13 @@ export function Sidebar({
         </div>
 
         <div className="sidebar-scroll mt-5 flex-1 overflow-y-auto overflow-x-hidden pr-1">
-          <div className="mb-3 flex items-center gap-1 rounded-xl bg-secondary/50 p-1" role="tablist" aria-label="Navegación principal">
+          <div className="mb-3 flex items-center gap-1 rounded-md bg-secondary/50 p-1" role="tablist" aria-label="Navegación principal">
             <button
               type="button"
               role="tab"
               aria-selected={sidebarTab === 'tasks'}
               onClick={() => handleTabChange('tasks')}
-              className={`flex-1 rounded-lg px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] transition flex items-center justify-center gap-1.5 ${sidebarTab === 'tasks' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`flex-1 rounded px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] transition flex items-center justify-center gap-1.5 ${sidebarTab === 'tasks' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <ListTodo className="size-4" />
               {!collapsed && 'Tasks'}
@@ -173,7 +173,7 @@ export function Sidebar({
               role="tab"
               aria-selected={sidebarTab === 'crm'}
               onClick={() => handleTabChange('crm')}
-              className={`flex-1 rounded-lg px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] transition flex items-center justify-center gap-1.5 ${sidebarTab === 'crm' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`flex-1 rounded px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] transition flex items-center justify-center gap-1.5 ${sidebarTab === 'crm' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <Handshake className="size-4" />
               {!collapsed && 'CRM'}
@@ -202,8 +202,8 @@ export function Sidebar({
           ) : (
             <div className="space-y-3">
               <section>
-                <div className="flex items-center justify-between rounded-lg px-1.5 py-2">
-                  <button type="button" onClick={() => toggleSection('clients')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-lg hover:bg-background/80 transition' : ''}`} title="Clientes">
+                <div className="flex items-center justify-between rounded-sm px-1.5 py-2">
+                  <button type="button" onClick={() => toggleSection('clients')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-sm hover:bg-background/80 transition' : ''}`} title="Clientes">
                     {collapsed ? <Users className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.clients ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Clientes'}
                   </button>
@@ -214,7 +214,7 @@ export function Sidebar({
                     {clients.map(client => (
                       <div key={client.id} className={`${entryClass} ${activeClient === client.id ? 'bg-background shadow-sm' : 'text-muted-foreground hover:bg-background/80'}`}>
                         <button onClick={e => { e.stopPropagation(); onSelectClient?.(client.id) }} className="flex min-w-0 flex-1 items-center gap-2 text-left">
-                          <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-primary/10 text-[10px] font-bold text-primary">{client.name.slice(0, 2).toUpperCase()}</span>
+                          <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-primary/10 text-[10px] font-bold text-primary">{client.name.slice(0, 2).toUpperCase()}</span>
                           <span className="truncate">{client.name}</span>
                         </button>
                         {onEditClient && <button onClick={e => { e.stopPropagation(); onEditClient(client) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-primary group-hover:visible" aria-label={`Editar cliente ${client.name}`}><Pencil className="size-3.5" /></button>}
@@ -226,8 +226,8 @@ export function Sidebar({
               </section>
 
               <section>
-                <div className="flex items-center justify-between rounded-lg px-1.5 py-2">
-                  <button type="button" onClick={() => toggleSection('milestones')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-lg hover:bg-background/80 transition' : ''}`} title="Hitos">
+                <div className="flex items-center justify-between rounded-sm px-1.5 py-2">
+                  <button type="button" onClick={() => toggleSection('milestones')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-sm hover:bg-background/80 transition' : ''}`} title="Hitos">
                     {collapsed ? <Flag className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.milestones ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Hitos'}
                   </button>
@@ -242,9 +242,9 @@ export function Sidebar({
                       return (
                         <div key={ms.id} className={`${entryClass} ${isActive ? 'bg-background shadow-sm' : 'text-muted-foreground hover:bg-background/80'}`}>
                           <button onClick={e => { e.stopPropagation(); onSelectMilestone?.(ms) }} className="flex min-w-0 flex-1 items-center gap-2 text-left">
-                            <span className={`size-2 shrink-0 rounded-full ${ms.color}`} />
+                            <span className={`size-2 shrink-0 rounded-sm ${ms.color}`} />
                             <span className="truncate">{ms.name}</span>
-                            <span className="ml-auto shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{done}/{msTasks.length}</span>
+                            <span className="ml-auto shrink-0 rounded-sm bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{done}/{msTasks.length}</span>
                           </button>
                           {onEditMilestone && <button onClick={e => { e.stopPropagation(); onEditMilestone(ms) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-primary group-hover:visible" aria-label={`Editar hito ${ms.name}`}><Pencil className="size-3.5" /></button>}
                           {onRemoveMilestone && <button onClick={e => { e.stopPropagation(); onRemoveMilestone(ms) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-destructive group-hover:visible" aria-label={`Eliminar hito ${ms.name}`}><Trash2 className="size-3.5" /></button>}
@@ -256,8 +256,8 @@ export function Sidebar({
               </section>
 
               {(activeClient || visibleSpaces.length > 0) && <section>
-                <div className="flex items-center justify-between rounded-lg px-1.5 py-2">
-                  <button type="button" onClick={() => toggleSection('spaces')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-lg hover:bg-background/80 transition' : ''}`} title="Espacios">
+                <div className="flex items-center justify-between rounded-sm px-1.5 py-2">
+                  <button type="button" onClick={() => toggleSection('spaces')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-sm hover:bg-background/80 transition' : ''}`} title="Espacios">
                     {collapsed ? <FolderOpen className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.spaces ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Espacios'}
                   </button>
@@ -270,7 +270,7 @@ export function Sidebar({
                       return (
                         <div key={space.id} className={`${entryClass} ${activeSpace === space.id ? 'bg-background shadow-sm' : 'text-muted-foreground hover:bg-background/80'}`}>
                           <button onClick={e => { e.stopPropagation(); onSelectSpace?.(space.id) }} className="flex min-w-0 flex-1 items-center gap-2 text-left">
-                            <span className={`size-2 shrink-0 rounded-full ${space.color}`} />
+                            <span className={`size-2 shrink-0 rounded-sm ${space.color}`} />
                             <span className="truncate">{space.name}</span>
                           </button>
                           {onOpenSecrets && (
@@ -293,8 +293,8 @@ export function Sidebar({
               </section>}
 
               {(activeSpace || visibleBoards.length > 0) && <section>
-                <div className="flex items-center justify-between rounded-lg px-1.5 py-2">
-                  <button type="button" onClick={() => toggleSection('boards')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-lg hover:bg-background/80 transition' : ''}`} title="Tableros">
+                <div className="flex items-center justify-between rounded-sm px-1.5 py-2">
+                  <button type="button" onClick={() => toggleSection('boards')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-sm hover:bg-background/80 transition' : ''}`} title="Tableros">
                     {collapsed ? <LayoutDashboard className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.boards ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Tableros'}
                   </button>
@@ -319,11 +319,11 @@ export function Sidebar({
         </div>
 
         {!collapsed && (
-          <div className="mt-4 shrink-0 rounded-2xl border border-border bg-gradient-to-br from-secondary to-secondary/60 p-4 shadow-sm">
+          <div className="mt-4 shrink-0 rounded-sm border border-border bg-gradient-to-br from-secondary to-secondary/60 p-4 shadow-sm">
             <p className="text-sm font-medium">Progreso semanal</p>
             <p className="mt-1 text-xs text-muted-foreground">{completed} de {tasks.length} tareas completadas</p>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-background/80">
-              <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-400" style={{ width: `${tasks.length ? completed / tasks.length * 100 : 0}%` }} />
+            <div className="mt-3 h-1.5 overflow-hidden rounded bg-background/80">
+              <div className="h-full rounded bg-gradient-to-r from-emerald-500 to-green-400" style={{ width: `${tasks.length ? completed / tasks.length * 100 : 0}%` }} />
             </div>
           </div>
         )}
