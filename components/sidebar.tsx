@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Sparkles, Users, Handshake, GitBranch, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Lock, LockOpen, ListTodo, Flag, FolderOpen, LayoutDashboard } from 'lucide-react'
+import { Plus, Pencil, Trash2, Sparkles, Users, Handshake, GitBranch, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Lock, Unlock, ListTodo, Flag, FolderOpen, LayoutDashboard, Eye } from 'lucide-react'
 import type { Board, Client, CrmDeal, CrmStage, Milestone, Space, Task } from '@/lib/db'
 
 interface SidebarProps {
@@ -21,7 +21,7 @@ interface SidebarProps {
   onEditSpace?: (space: Space) => void
   onRemoveSpace?: (space: Space) => void
   onAddSpace?: () => void
-  onOpenSecrets?: () => void
+  onOpenSecrets?: (spaceId: number) => void
   boards?: Board[]
   activeBoard?: number | null
   onSelectBoard?: (id: number) => void
@@ -275,12 +275,12 @@ export function Sidebar({
                           </button>
                           {onOpenSecrets && (
                             <button
-                              onClick={e => { e.stopPropagation(); onOpenSecrets() }}
-                              className={`invisible rounded-md p-1 group-hover:visible ${hasPassword ? 'text-muted-foreground hover:text-primary' : 'text-emerald-600 hover:text-emerald-500'}`}
+                              onClick={e => { e.stopPropagation(); onOpenSecrets(space.id) }}
+                              className={`invisible rounded-md p-1 transition-colors group-hover:visible text-white hover:text-white-400'}`}
                               aria-label={hasPassword ? `Espacio protegido ${space.name}` : `Espacio sin contraseña ${space.name}`}
                               title={hasPassword ? 'Protegido con contraseña' : 'Sin contraseña'}
                             >
-                              {hasPassword ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5" />}
+                              {hasPassword ? <Lock className="size-4" /> : <Eye className="size-4" />}
                             </button>
                           )}
                           {onEditSpace && <button onClick={e => { e.stopPropagation(); onEditSpace(space) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-primary group-hover:visible" aria-label={`Editar espacio ${space.name}`}><Pencil className="size-3.5" /></button>}

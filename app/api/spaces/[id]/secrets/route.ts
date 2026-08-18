@@ -25,9 +25,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
   const body = await request.json()
-  const secret = updateSpaceSecret(Number(id), body)
+  const secretId = Number(body.id)
+  if (!secretId) return NextResponse.json({ error: 'id requerido' }, { status: 400 })
+  const secret = updateSpaceSecret(secretId, body)
   return secret ? NextResponse.json({ data: secret }) : NextResponse.json({ error: 'Secreto no encontrado' }, { status: 404 })
 }
 

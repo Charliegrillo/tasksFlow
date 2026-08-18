@@ -78,6 +78,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
   const [crmInteractions, setCrmInteractions] = useState<Record<number, CrmInteraction[]>>({})
   const [activeView, setActiveView] = useState<'board' | 'crm' | 'contacts' | 'pipelines' | null>(null)
   const [spaceSecretsOpen, setSpaceSecretsOpen] = useState(false)
+  const [spaceSecretsId, setSpaceSecretsId] = useState<number | null>(null)
   const [contactDialog, setContactDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Contact }>({ open: false, mode: 'add' })
   const [showComments, setShowComments] = useState(false)
   const columns: Column[] = boardLists.length ? boardLists.map(list => ({ id: ({ Backlog: 'backlog', 'En progreso': 'progress', 'En revisión': 'review', Completado: 'done' } as Record<string, string>)[list.name] ?? `list-${list.id}`, dbId: list.id, title: list.name, color: list.color })) : fallbackColumns
@@ -281,7 +282,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
 
   return <>
     <main className="min-h-screen bg-background text-foreground" onClick={() => menu && setMenu(null)}>
-    <Sidebar activeView={activeView} onSelectView={view => setActiveView(view)} crmDealCount={crmDeals.length} clients={clients} milestones={milestones} activeClient={activeClient} onSelectClient={handleSelectClient} onEditClient={editClient} onRemoveClient={removeClient} onAddClient={addClient} spaces={spaces} activeSpace={activeSpace} onSelectSpace={id => { setActiveSpace(id); setSelectedMilestoneId(null) }} onEditSpace={editSpace} onRemoveSpace={removeSpace} onAddSpace={addSpace} onOpenSecrets={() => setSpaceSecretsOpen(true)} boards={boards} activeBoard={activeBoard} onSelectBoard={id => { setActiveBoard(id); setSelectedMilestoneId(null); setActiveView(null) }} onEditBoard={editBoard} onRemoveBoard={removeBoard} onAddBoard={addBoard} onAddMilestone={addMilestone} onEditMilestone={editMilestone} onRemoveMilestone={removeMilestone} onSelectMilestone={ms => setSelectedMilestoneId(ms.id === selectedMilestoneId ? null : ms.id)} highlightMilestoneId={selectedMilestoneId} />
+    <Sidebar activeView={activeView} onSelectView={view => setActiveView(view)} crmDealCount={crmDeals.length} clients={clients} milestones={milestones} activeClient={activeClient} onSelectClient={handleSelectClient} onEditClient={editClient} onRemoveClient={removeClient} onAddClient={addClient} spaces={spaces} activeSpace={activeSpace} onSelectSpace={id => { setActiveSpace(id); setSelectedMilestoneId(null) }} onEditSpace={editSpace} onRemoveSpace={removeSpace} onAddSpace={addSpace} onOpenSecrets={(spaceId) => { setSpaceSecretsId(spaceId); setSpaceSecretsOpen(true) }} boards={boards} activeBoard={activeBoard} onSelectBoard={id => { setActiveBoard(id); setSelectedMilestoneId(null); setActiveView(null) }} onEditBoard={editBoard} onRemoveBoard={removeBoard} onAddBoard={addBoard} onAddMilestone={addMilestone} onEditMilestone={editMilestone} onRemoveMilestone={removeMilestone} onSelectMilestone={ms => setSelectedMilestoneId(ms.id === selectedMilestoneId ? null : ms.id)} highlightMilestoneId={selectedMilestoneId} />
     <section className="lg:pl-64">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-5 md:px-10">
         <div className="flex items-center gap-3">
@@ -548,7 +549,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
       </div>
     )}
     {budgetOpen && activeBoard && <BudgetPanel boardId={activeBoard} onClose={() => setBudgetOpen(false)} />}
-    {spaceSecretsOpen && activeSpace && <SpaceSecretsPanel spaceId={activeSpace} onClose={() => setSpaceSecretsOpen(false)} />}
+    {spaceSecretsOpen && spaceSecretsId && <SpaceSecretsPanel spaceId={spaceSecretsId} onClose={() => { setSpaceSecretsOpen(false); setSpaceSecretsId(null) }} />}
     <ConfirmDialog open={confirmDialog.open} title={confirmDialog.title} message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onCancel={() => setConfirmDialog(v => ({ ...v, open: false }))} />
     <ContactDialog open={contactDialog.open} onClose={() => setContactDialog(v => ({ ...v, open: false }))} onSave={handleContactSave} initialData={contactDialog.data ? { name: contactDialog.data.name, email: contactDialog.data.email, phone: contactDialog.data.phone, company: contactDialog.data.company, position: contactDialog.data.position, address: contactDialog.data.address, website: contactDialog.data.website, notes: contactDialog.data.notes } : undefined} title={contactDialog.mode === 'add' ? 'Nuevo contacto' : 'Editar contacto'} />
     {archiveOpen && <ArchivePanel boards={boards} onClose={() => setArchiveOpen(false)} onUpdate={updateBoardPaymentStatus} />}
