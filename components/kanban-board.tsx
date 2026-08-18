@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ExternalLink, LayoutGrid, List, MoreHorizontal, Paperclip, Plus, Search, SlidersHorizontal, Trash2, X, DollarSign, Archive, GripVertical, MoveHorizontal } from 'lucide-react'
+import { ExternalLink, LayoutGrid, List, MoreHorizontal, Paperclip, Plus, Search, SlidersHorizontal, Trash2, X, DollarSign, Archive, GripVertical, MoveHorizontal, PanelLeftOpen } from 'lucide-react'
 import type { Attachment, Board, BoardList, Client, Contact, CrmDeal, CrmInteraction, CrmStage, Milestone, Space, Task, TaskPriority, TaskStatus } from '@/lib/db'
 import { ClientDialog } from '@/components/client-dialog'
 import { SpaceDialog } from '@/components/space-dialog'
@@ -284,8 +284,22 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
     <Sidebar activeView={activeView} onSelectView={view => setActiveView(view)} crmDealCount={crmDeals.length} clients={clients} milestones={milestones} activeClient={activeClient} onSelectClient={handleSelectClient} onEditClient={editClient} onRemoveClient={removeClient} onAddClient={addClient} spaces={spaces} activeSpace={activeSpace} onSelectSpace={id => { setActiveSpace(id); setSelectedMilestoneId(null) }} onEditSpace={editSpace} onRemoveSpace={removeSpace} onAddSpace={addSpace} onOpenSecrets={() => setSpaceSecretsOpen(true)} boards={boards} activeBoard={activeBoard} onSelectBoard={id => { setActiveBoard(id); setSelectedMilestoneId(null); setActiveView(null) }} onEditBoard={editBoard} onRemoveBoard={removeBoard} onAddBoard={addBoard} onAddMilestone={addMilestone} onEditMilestone={editMilestone} onRemoveMilestone={removeMilestone} onSelectMilestone={ms => setSelectedMilestoneId(ms.id === selectedMilestoneId ? null : ms.id)} highlightMilestoneId={selectedMilestoneId} />
     <section className="lg:pl-64">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-5 md:px-10">
-        <div>
-          {isMilestoneView ? (
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              const sidebar = document.querySelector('aside')
+              if (sidebar) {
+                sidebar.classList.toggle('-translate-x-full')
+              }
+            }}
+            className="rounded-lg border border-border bg-background/80 p-2 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground lg:hidden"
+            aria-label="Abrir menú"
+          >
+            <PanelLeftOpen className="size-5" />
+          </button>
+          <div>
+            {isMilestoneView ? (
             <>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Reporte de Hito</p>
               <h1 className="mt-1 flex items-center gap-3 text-2xl font-semibold tracking-tight">
@@ -308,6 +322,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">{boards.find(b => b.id === activeBoard)?.name ?? 'Tablero'}</h1>
             </>
           )}
+          </div>
         </div>
       </header>
 
@@ -424,8 +439,8 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
       )}
     </section>
     {selected && (
-        <div className="fixed inset-0 z-20 flex items-center justify-center bg-background/70 p-0 sm:p-4" role="presentation" onClick={() => setSelected(null)}>
-          <div onClick={e => e.stopPropagation()} className="flex h-full sm:h-[90vh] w-full sm:max-w-4xl flex-col rounded-none sm:rounded-2xl border-0 sm:border border-border bg-card shadow-xl">
+        <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-background/70 p-0 sm:p-4" role="presentation" onClick={() => setSelected(null)}>
+          <div onClick={e => e.stopPropagation()} className="flex h-[85vh] sm:h-[90vh] w-full sm:max-w-4xl flex-col rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-border px-4 sm:px-6 py-3 sm:py-4">
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground">Detalle de tarea</p>
@@ -435,9 +450,9 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
             </div>
             <div className="flex min-h-0 flex-1 flex-col sm:flex-row overflow-hidden">
               <div className="flex flex-1 flex-col overflow-hidden">
-                <div className="flex gap-1 border-b border-border px-4 sm:px-6 pt-3">
-                  {[{ id: 'details' as const, label: 'Detalles' }, { id: 'checklists' as const, label: 'Checklists' }, { id: 'attachments' as const, label: 'Adjuntos' }].map(tab => <button key={tab.id} onClick={() => setDetailTab(tab.id)} className={`rounded-t-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors ${detailTab === tab.id ? 'border-b-2 border-primary text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{tab.label}</button>)}
-                  <button onClick={() => setShowComments(v => !v)} className={`ml-auto flex items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs sm:text-sm font-medium transition-colors sm:hidden ${showComments ? 'border-b-2 border-primary text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                <div className="flex gap-1 border-b border-border px-4 sm:px-6 pt-3 overflow-x-auto">
+                  {[{ id: 'details' as const, label: 'Detalles' }, { id: 'checklists' as const, label: 'Checklists' }, { id: 'attachments' as const, label: 'Adjuntos' }].map(tab => <button key={tab.id} onClick={() => { setDetailTab(tab.id); setShowComments(false) }} className={`rounded-t-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${!showComments && detailTab === tab.id ? 'border-b-2 border-primary text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{tab.label}</button>)}
+                  <button onClick={() => setShowComments(v => !v)} className={`ml-auto flex items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs sm:text-sm font-medium transition-colors sm:hidden whitespace-nowrap ${showComments ? 'border-b-2 border-primary text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                     <span className="text-[10px] sm:text-xs">Comentarios</span>
                   </button>
                 </div>
@@ -474,7 +489,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
                   <button onClick={() => setSelected(null)} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Listo</button>
                 </div>
               </div>
-              <div className={`${showComments ? 'max-h-[50vh] sm:max-h-none' : 'max-h-0 sm:max-h-none'} sm:flex sm:w-[340px] sm:shrink-0 sm:flex-col overflow-hidden sm:border-l sm:border-border transition-all duration-300`}>
+              <div className={`${showComments ? 'flex flex-col h-[50vh] sm:h-auto' : 'hidden'} sm:flex sm:w-[340px] sm:shrink-0 sm:flex-col overflow-hidden sm:border-l sm:border-border transition-all duration-300`}>
                 <CommentsSection taskId={selected.id} />
               </div>
             </div>

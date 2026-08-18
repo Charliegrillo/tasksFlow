@@ -137,7 +137,7 @@ export function Sidebar({
   const entryClass = 'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors'
 
   return (
-    <aside className={`fixed inset-y-0 left-0 hidden border-r border-border bg-card/95 backdrop-blur-sm shadow-[0_0_0_1px_rgba(15,23,42,0.02)] transition-all duration-300 lg:flex ${collapsed ? 'w-24' : 'w-72'}`}>
+    <aside className={`fixed inset-y-0 left-0 z-40 border-r border-border bg-card/95 backdrop-blur-sm shadow-[0_0_0_1px_rgba(15,23,42,0.02)] transition-all duration-300 flex flex-col -translate-x-full lg:translate-x-0 ${collapsed ? 'w-24' : 'w-72'}`}>
       <div className="flex h-full w-full flex-col px-3 py-4">
         <div className="flex items-center justify-between gap-2 border-b border-border/80 pb-4">
           <div className={`flex items-center gap-3 ${collapsed ? 'justify-center w-full' : ''}`}>
