@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useEffect, useState, Fragment } from 'react'
+import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
 import type { Contact } from '@/lib/db'
 import { ContactDialog } from './contact-dialog'
 import { ConfirmDialog } from './confirm-dialog'
@@ -19,8 +19,9 @@ export function ContactPanel({ contacts, onAdd, onEdit, onDelete }: ContactPanel
   const [search, setSearch] = useState('')
   const [filterCompany, setFilterCompany] = useState('')
   const [page, setPage] = useState(1)
+  const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({})
   const [contactDialog, setContactDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Contact }>({ open: false, mode: 'add' })
-  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({ open: false, title: '', message: '', onConfirm: () => {} })
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({ open: false, title: '', message: '', onConfirm: {} as any })
 
   useEffect(() => { setPage(1) }, [search, filterCompany])
 
@@ -60,16 +61,16 @@ export function ContactPanel({ contacts, onAdd, onEdit, onDelete }: ContactPanel
         </div>
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2"><Search className="size-4 text-muted-foreground" /><input value={search} onChange={e => setSearch(e.target.value)} className="w-48 bg-transparent text-sm outline-none placeholder:text-muted-foreground" placeholder="Buscar nombre, email, tel..." /></div>
-          <select value={filterCompany} onChange={e => setFilterCompany(e.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"><option value="">Todas las empresas</option>{companies.map(c => <option key={c} value={c}>{c}</option>)}</select>
+      <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 flex-1 sm:flex-initial"><Search className="size-4 text-muted-foreground shrink-0" /><input value={search} onChange={e => setSearch(e.target.value)} className="w-full sm:w-48 bg-transparent text-sm outline-none placeholder:text-muted-foreground" placeholder="Buscar nombre, email, tel..." /></div>
+          <select value={filterCompany} onChange={e => setFilterCompany(e.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary w-full sm:w-auto"><option value="">Todas las empresas</option>{companies.map(c => <option key={c} value={c}>{c}</option>)}</select>
           <span className="text-xs text-muted-foreground">{filtered.length} contactos{filterCompany ? ` en ${filterCompany}` : ''}</span>
         </div>
-        <button onClick={() => setContactDialog({ open: true, mode: 'add' })} className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="size-4" /> Nuevo contacto</button>
+        <button onClick={() => setContactDialog({ open: true, mode: 'add' })} className="flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="size-4" /> Nuevo contacto</button>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-border bg-card">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-card">
         {paged.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <p className="text-sm">No se encontraron contactos</p>
@@ -79,30 +80,59 @@ export function ContactPanel({ contacts, onAdd, onEdit, onDelete }: ContactPanel
           <table className="w-full">
             <thead>
               <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <th className="px-6 py-3">Nombre</th>
-                <th className="px-6 py-3">Empresa</th>
-                <th className="px-6 py-3">Email</th>
-                <th className="px-6 py-3">Teléfono</th>
-                <th className="px-6 py-3">Cargo</th>
-                <th className="px-6 py-3 text-right">Acciones</th>
+                <th className="px-4 md:px-6 py-3">Nombre</th>
+                <th className="hidden md:table-cell px-6 py-3">Empresa</th>
+                <th className="hidden lg:table-cell px-6 py-3">Email</th>
+                <th className="hidden lg:table-cell px-6 py-3">Teléfono</th>
+                <th className="hidden xl:table-cell px-6 py-3">Cargo</th>
+                <th className="px-4 md:px-6 py-3 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {paged.map(contact => (
-                <tr key={contact.id} className="border-b border-border hover:bg-secondary/50">
-                  <td className="px-6 py-3"><div className="flex items-center gap-2"><span className="grid size-7 shrink-0 place-items-center rounded-md bg-primary/10 text-[10px] font-bold text-primary">{contact.name.slice(0, 2).toUpperCase()}</span><span className="text-sm font-medium">{contact.name}</span></div></td>
-                  <td className="px-6 py-3 text-sm text-muted-foreground">{contact.company || '—'}</td>
-                  <td className="px-6 py-3 text-sm text-muted-foreground">{contact.email || '—'}</td>
-                  <td className="px-6 py-3 text-sm text-muted-foreground">{contact.phone || '—'}</td>
-                  <td className="px-6 py-3 text-sm text-muted-foreground">{contact.position || '—'}</td>
-                  <td className="px-6 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => setContactDialog({ open: true, mode: 'edit', data: contact })} className="rounded p-1.5 text-muted-foreground hover:bg-secondary hover:text-primary"><Pencil className="size-3.5" /></button>
-                      <button onClick={() => setConfirmDialog({ open: true, title: 'Eliminar contacto', message: `¿Eliminar el contacto ${contact.name}?`, onConfirm: () => { onDelete(contact.id); setConfirmDialog(v => ({ ...v, open: false })) } })} className="rounded p-1.5 text-muted-foreground hover:bg-secondary hover:text-destructive"><Trash2 className="size-3.5" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {paged.map(contact => {
+                const isExpanded = !!expandedRows[contact.id]
+                return (
+                  <Fragment key={contact.id}>
+                    <tr className="border-b border-border hover:bg-secondary/50">
+                      <td className="px-4 md:px-6 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setExpandedRows(v => ({ ...v, [contact.id]: !v[contact.id] }))}
+                            className="md:hidden rounded p-1 text-muted-foreground hover:bg-secondary"
+                            aria-label="Expandir fila"
+                          >
+                            <ChevronDown className={`size-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                          </button>
+                          <span className="grid size-7 shrink-0 place-items-center rounded-md bg-primary/10 text-[10px] font-bold text-primary">{contact.name.slice(0, 2).toUpperCase()}</span>
+                          <div>
+                            <span className="text-sm font-medium block">{contact.name}</span>
+                            <span className="text-xs text-muted-foreground md:hidden block">{contact.company || 'Sin empresa'}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="hidden md:table-cell px-6 py-3 text-sm text-muted-foreground">{contact.company || '—'}</td>
+                      <td className="hidden lg:table-cell px-6 py-3 text-sm text-muted-foreground">{contact.email || '—'}</td>
+                      <td className="hidden lg:table-cell px-6 py-3 text-sm text-muted-foreground">{contact.phone || '—'}</td>
+                      <td className="hidden xl:table-cell px-6 py-3 text-sm text-muted-foreground">{contact.position || '—'}</td>
+                      <td className="px-4 md:px-6 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => setContactDialog({ open: true, mode: 'edit', data: contact })} className="rounded p-1.5 text-muted-foreground hover:bg-secondary hover:text-primary"><Pencil className="size-3.5" /></button>
+                          <button onClick={() => setConfirmDialog({ open: true, title: 'Eliminar contacto', message: `¿Eliminar el contacto ${contact.name}?`, onConfirm: () => { onDelete(contact.id); setConfirmDialog(v => ({ ...v, open: false })) } })} className="rounded p-1.5 text-muted-foreground hover:bg-secondary hover:text-destructive"><Trash2 className="size-3.5" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr className="bg-secondary/20 md:hidden border-b border-border">
+                        <td colSpan={6} className="px-4 py-3 text-xs space-y-1 text-muted-foreground">
+                          <p><strong className="text-foreground">Email:</strong> {contact.email || '—'}</p>
+                          <p><strong className="text-foreground">Teléfono:</strong> {contact.phone || '—'}</p>
+                          <p><strong className="text-foreground">Cargo:</strong> {contact.position || '—'}</p>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                )
+              })}
             </tbody>
           </table>
         )}
