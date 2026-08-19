@@ -143,36 +143,12 @@ export function Sidebar({
   return (
     <aside className={`fixed inset-y-0 left-0 z-40 border-r border-border bg-card/95 backdrop-blur-sm shadow-[0_0_0_1px_rgba(15,23,42,0.02)] transition-all duration-300 flex flex-col -translate-x-full lg:translate-x-0 ${collapsed ? 'w-24' : 'w-72'}`}>
       <div className="flex h-full w-full flex-col px-3 py-4">
-        <div className="flex items-center justify-between gap-2 border-b border-border/80 pb-4">
-          <div className={`flex items-center gap-3 ${collapsed ? 'justify-center w-full' : ''}`}>
-            <div className="grid size-9 place-items-center rounded-sm bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm ring-1 ring-primary/20">
-              <Sparkles className="size-4" />
-            </div>
-            {!collapsed && <span className="text-lg font-semibold tracking-tight">Taskflow</span>}
+        <div className={`flex items-center gap-3 border-b border-border/80 pb-4 ${collapsed ? 'justify-center' : ''}`}>
+          <div className="grid size-9 place-items-center rounded-sm bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm ring-1 ring-primary/20">
+            <Sparkles className="size-4" />
           </div>
-          {!collapsed && (
-            <button
-              type="button"
-              onClick={() => setCollapsed(prev => !prev)}
-              className="rounded-sm border border-border bg-background/80 p-1.5 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground"
-              aria-label="Colapsar sidebar"
-            >
-              <PanelLeftClose className="size-4" />
-            </button>
-          )}
+          {!collapsed && <span className="text-lg font-semibold tracking-tight">Taskflow</span>}
         </div>
-        {collapsed && (
-          <div className="flex flex-col items-center gap-2 border-b border-border/80 pb-4">
-            <button
-              type="button"
-              onClick={() => setCollapsed(prev => !prev)}
-              className="rounded-sm border border-border bg-background/80 p-1.5 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground"
-              aria-label="Expandir sidebar"
-            >
-              <PanelLeftOpen className="size-4" />
-            </button>
-          </div>
-        )}
 
         <div className="sidebar-scroll mt-5 flex-1 overflow-y-auto overflow-x-hidden pr-1">
           <div className="mb-3 flex items-center gap-1 rounded-md bg-secondary/50 p-1" role="tablist" aria-label="Navegación principal">
@@ -370,6 +346,14 @@ export function Sidebar({
           </button>
         </div>
       </div>
+      <button
+        type="button"
+        onClick={() => setCollapsed(prev => !prev)}
+        className="absolute right-0 top-4 -translate-y-0 translate-x-1/2 z-50 rounded-full border border-border bg-card p-1.5 text-muted-foreground shadow-md transition hover:border-primary/30 hover:bg-secondary hover:text-foreground"
+        aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+      >
+        {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+      </button>
     </aside>
   )
 }

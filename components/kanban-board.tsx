@@ -316,15 +316,13 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
           <div>
             {isMilestoneView ? (
             <>
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Reporte de Hito</p>
-              <h1 className="mt-1 flex items-center gap-3 text-2xl font-semibold tracking-tight">
-                {activeMilestone && <span className={`size-3 rounded-sm ${activeMilestone.color}`} />}
+              <h1 className="mt-1 flex items-center gap-3 text-xl font-semibold tracking-tight">Hito 
+                {activeMilestone && <span className={`size-2 rounded-sm ${activeMilestone.color}`} />}
                 {activeMilestone?.name ?? 'Hito'}
               </h1>
             </>
           ) : activeView === 'crm' || activeView === 'pipelines' ? (
             <>
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">CRM</p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">Pipelines</h1>
             </>
           ) : activeView === 'contacts' ? (
@@ -333,8 +331,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
             </>
           ) : (
             <>
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Espacio de trabajo / {spaces.find(s => s.id === activeSpace)?.name ?? 'Producto'} / {boards.find(b => b.id === activeBoard)?.name ?? 'Tablero'}</p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight">{boards.find(b => b.id === activeBoard)?.name ?? 'Tablero'}</h1>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight">Tablero {boards.find(b => b.id === activeBoard)?.name ?? 'Tablero'}</h1>
             </>
           )}
           </div>
