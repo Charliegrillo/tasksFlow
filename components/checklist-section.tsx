@@ -13,6 +13,8 @@ export function ChecklistSection({ taskId }: ChecklistSectionProps) {
   const [newTitle, setNewTitle] = useState('')
   const [addingItemTo, setAddingItemTo] = useState<number | null>(null)
   const [itemTitle, setItemTitle] = useState('')
+  const [editingChecklist, setEditingChecklist] = useState<number | null>(null)
+  const [checklistTitleForm, setChecklistTitleForm] = useState('')
   const [editingItem, setEditingItem] = useState<number | null>(null)
   const [editDesc, setEditDesc] = useState('')
   const [editDue, setEditDue] = useState('')
@@ -33,6 +35,15 @@ export function ChecklistSection({ taskId }: ChecklistSectionProps) {
   async function removeChecklist(id: number) {
     await fetch(`/api/checklists/${id}`, { method: 'DELETE' })
     setChecklists(v => v.filter(c => c.id !== id))
+  }
+
+  async function saveChecklistTitle(id: number) {
+    if (!checklistTitleForm.trim()) return
+    const res = await fetch(`/api/checklists/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: checklistTitleForm.trim() }) })
+    if (!res.ok) return
+    const { data } = await res.json()
+    setChecklists(v => v.map(c => c.id === id ? { ...c, title: data.title } : c))
+    setEditingChecklist(null)
   }
 
   async function addItem(checklistId: number) {
@@ -67,7 +78,7 @@ export function ChecklistSection({ taskId }: ChecklistSectionProps) {
   }
 
   return (
-    <section className="mt-5 max-h-[300px] overflow-y-auto border-t border-border pt-5">
+    <section className="mt-5 border-t border-border pt-5">
       {checklists.map(cl => {
         const total = cl.items.length
         const checked = cl.items.filter(i => i.checked).length
@@ -75,8 +86,21 @@ export function ChecklistSection({ taskId }: ChecklistSectionProps) {
         return (
           <div key={cl.id} className="mb-6 last:mb-0">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold">{cl.title}</h3>
-              <button onClick={() => removeChecklist(cl.id)} className="rounded p-1 text-muted-foreground hover:text-destructive" aria-label="Eliminar checklist"><Trash2 className="size-3.5" /></button>
+              {editingChecklist === cl.id ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <input value={checklistTitleForm} onChange={e => setChecklistTitleForm(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') void saveChecklistTitle(cl.id); if (e.key === 'Escape') setEditingChecklist(null) }} className="flex-1 rounded-sm border border-border bg-background px-2 py-1 text-sm outline-none focus:border-primary" autoFocus />
+                  <button onClick={() => void saveChecklistTitle(cl.id)} className="rounded-sm bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90">Guardar</button>
+                  <button onClick={() => setEditingChecklist(null)} className="rounded-sm px-2 py-1 text-xs text-muted-foreground hover:bg-secondary">Cancelar</button>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-sm font-semibold">{cl.title}</h3>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => { setEditingChecklist(cl.id); setChecklistTitleForm(cl.title) }} className="rounded p-1 text-muted-foreground/50 hover:text-primary" aria-label="Editar checklist"><Pencil className="size-3.5" /></button>
+                    <button onClick={() => removeChecklist(cl.id)} className="rounded p-1 text-muted-foreground hover:text-destructive" aria-label="Eliminar checklist"><Trash2 className="size-3.5" /></button>
+                  </div>
+                </>
+              )}
             </div>
             <div className="mb-3 flex items-center gap-3">
               <span className="text-xs text-muted-foreground">{pct}%</span>
