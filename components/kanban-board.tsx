@@ -14,6 +14,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ArchivePanel } from '@/components/archive-panel'
 import { CommentsSection } from '@/components/comments-section'
 import { ArchivedBoardsModal } from '@/components/archived-boards-modal'
+import { ClientInvoiceView } from '@/components/client-invoice-modal'
 import { ArchivedMilestonesModal } from '@/components/archived-milestones-modal'
 import { ArchivedClientsModal } from '@/components/archived-clients-modal'
 import { ChecklistSection } from '@/components/checklist-section'
@@ -80,7 +81,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
   const [crmStages, setCrmStages] = useState<CrmStage[]>([])
   const [crmDeals, setCrmDeals] = useState<CrmDeal[]>([])
   const [crmInteractions, setCrmInteractions] = useState<Record<number, CrmInteraction[]>>({})
-  const [activeView, setActiveView] = useState<'board' | 'crm' | 'contacts' | 'pipelines' | null>(null)
+  const [activeView, setActiveView] = useState<'board' | 'crm' | 'contacts' | 'pipelines' | 'invoices' | null>(null)
   const [spaceSecretsOpen, setSpaceSecretsOpen] = useState(false)
   const [spaceSecretsId, setSpaceSecretsId] = useState<number | null>(null)
   const [archivedBoardsOpen, setArchivedBoardsOpen] = useState(false)
@@ -332,6 +333,10 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
             <>
               <h1 className="text-2xl font-semibold tracking-tight">Contactos</h1>
             </>
+          ) : activeView === 'invoices' ? (
+            <>
+              <h1 className="text-2xl font-semibold tracking-tight">Facturas</h1>
+            </>
           ) : (
             <>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">Tablero {boards.find(b => b.id === activeBoard)?.name ?? 'Tablero'}</h1>
@@ -396,6 +401,8 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
         </>
       ) : activeView === 'contacts' ? (
         <ContactPanel contacts={contacts} onAdd={handleContactPanelAdd} onEdit={handleContactPanelEdit} onDelete={handleContactPanelDelete} />
+      ) : activeView === 'invoices' ? (
+        <ClientInvoiceView clients={clients} />
       ) : (
         <div className="px-5 py-6 md:px-10">
           <div className="flex flex-wrap items-center gap-3">
@@ -562,7 +569,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
         </div>
       </div>
     )}
-    {budgetOpen && activeBoard && <BudgetPanel boardId={activeBoard} onClose={() => setBudgetOpen(false)} />}
+    {budgetOpen && activeBoard && <BudgetPanel key={activeBoard} boardId={activeBoard} onClose={() => setBudgetOpen(false)} />}
     {spaceSecretsOpen && spaceSecretsId && <SpaceSecretsPanel spaceId={spaceSecretsId} onClose={() => { setSpaceSecretsOpen(false); setSpaceSecretsId(null) }} />}
     <ArchivedBoardsModal open={archivedBoardsOpen} spaceId={activeSpace} onClose={() => setArchivedBoardsOpen(false)} onRestore={restoreBoard} onDelete={removeBoard} />
     <ArchivedMilestonesModal open={archivedMilestonesOpen} clientId={activeClient} onClose={() => setArchivedMilestonesOpen(false)} onRestore={restoreMilestone} onDelete={removeMilestone} />

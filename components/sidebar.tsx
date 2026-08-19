@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Sparkles, Users, Handshake, GitBranch, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Lock, Unlock, ListTodo, Flag, FolderOpen, LayoutDashboard, Eye, LogOut, Archive, X } from 'lucide-react'
+import { Plus, Pencil, Trash2, Sparkles, Users, Handshake, GitBranch, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Lock, Unlock, ListTodo, Flag, FolderOpen, LayoutDashboard, Eye, LogOut, Archive, X, DollarSign } from 'lucide-react'
 import type { Board, Client, CrmDeal, CrmStage, Milestone, Space, Task } from '@/lib/db'
 
 interface SidebarProps {
-  activeView?: 'board' | 'crm' | 'contacts' | 'pipelines' | null
-  onSelectView?: (view: 'board' | 'crm' | 'contacts' | 'pipelines') => void
+  activeView?: 'board' | 'crm' | 'contacts' | 'pipelines' | 'invoices' | null
+  onSelectView?: (view: 'board' | 'crm' | 'contacts' | 'pipelines' | 'invoices') => void
   crmDealCount?: number
   clients?: Client[]
   milestones?: Milestone[]
@@ -54,6 +54,7 @@ export function Sidebar({
   const [tasks, setTasks] = useState<Task[]>([])
   const [localSpaces, setLocalSpaces] = useState<Space[]>([])
   const [localBoards, setLocalBoards] = useState<Board[]>([])
+  const [clientReceivable, setClientReceivable] = useState<Record<number, { pending: number; paid: number; cancelled: number; boards: { name: string; amount: number }[] }>>({})
   const [collapsed, setCollapsed] = useState(false)
   const [sectionOpen, setSectionOpen] = useState({
     clients: true,
@@ -75,7 +76,7 @@ export function Sidebar({
   useEffect(() => {
     if (activeView === 'contacts' || activeView === 'pipelines' || activeView === 'crm') {
       setSidebarTab('crm')
-    } else if (activeView === 'board' || activeView === null) {
+    } else if (activeView === 'board' || activeView === 'invoices' || activeView === null) {
       setSidebarTab('tasks')
     }
   }, [activeView])
@@ -133,6 +134,32 @@ export function Sidebar({
       }
     }
   }, [activeSpace, boards, localSpaces])
+
+  useEffect(() => {
+    const allClients = providedClients ?? localClients
+    if (!allClients.length) return
+    Promise.all(allClients.map(async (client) => {
+      const spacesRes = await fetch(`/api/spaces?clientId=${client.id}`).then(r => r.json())
+      const clientSpaces = spacesRes.data ?? []
+      const boardsRes = await Promise.all(clientSpaces.map((s: Space) => fetch(`/api/boards?spaceId=${s.id}`).then(r => r.json())))
+      const clientBoards = boardsRes.flatMap((r: { data?: Board[] }) => r.data ?? [])
+      const budgetsRes = await Promise.all(clientBoards.map((b: Board) => fetch(`/api/budget?boardId=${b.id}`).then(r => r.json())))
+      let pending = 0, paid = 0, cancelled = 0
+      const pendingBoards: { name: string; amount: number }[] = []
+      clientBoards.forEach((board: Board, i: number) => {
+        const budget = budgetsRes[i]?.data
+        const amount = budget?.actualTotal ?? budget?.estimatedTotal ?? 0
+        if (board.paymentStatus === 'pagado') paid += amount
+        else if (board.paymentStatus === 'cancelado') cancelled += amount
+        else { pending += amount; if (amount > 0) pendingBoards.push({ name: board.name, amount }) }
+      })
+      return { clientId: client.id, pending, paid, cancelled, boards: pendingBoards }
+    })).then(results => {
+      const map: Record<number, { pending: number; paid: number; cancelled: number; boards: { name: string; amount: number }[] }> = {}
+      for (const r of results) map[r.clientId] = { pending: r.pending, paid: r.paid, cancelled: r.cancelled, boards: r.boards }
+      setClientReceivable(map)
+    })
+  }, [providedClients, localClients])
 
   useEffect(() => { onCollapsedChange?.(collapsed) }, [collapsed, onCollapsedChange])
 
@@ -201,6 +228,14 @@ export function Sidebar({
           ) : (
             <div className="space-y-3">
               <section>
+                <div className="mt-2 flex flex-col gap-1">
+                  <button onClick={() => onSelectView?.('invoices')} className={`${entryClass} ${activeView === 'invoices' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:bg-background/80'}`}>
+                    <DollarSign className="size-4" />
+                    {!collapsed && <span className="truncate">Facturas</span>}
+                  </button>
+                </div>
+              </section>
+              <section>
                 <div className="group/header flex items-center justify-between rounded-sm px-1.5 py-2">
                   <button type="button" onClick={() => toggleSection('clients')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-sm hover:bg-background/80 transition' : ''}`} title="Clientes">
                     {collapsed ? <Users className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.clients ? 'rotate-90' : ''}`} />}
@@ -215,16 +250,19 @@ export function Sidebar({
                 </div>
                 {sectionOpen.clients && !collapsed && (
                   <div className="mt-2 flex flex-col gap-1">
-                    {clients.map(client => (
-                      <div key={client.id} className={`${entryClass} ${activeClient === client.id ? 'bg-background shadow-sm' : 'text-muted-foreground hover:bg-background/80'}`}>
-                        <button onClick={e => { e.stopPropagation(); onSelectClient?.(client.id) }} className="flex min-w-0 flex-1 items-center gap-2 text-left">
-                          <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-primary/10 text-[10px] font-bold text-primary">{client.name.slice(0, 2).toUpperCase()}</span>
-                          <span className="truncate">{client.name}</span>
-                        </button>
-                        {onEditClient && <button onClick={e => { e.stopPropagation(); onEditClient(client) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-primary group-hover:visible" aria-label={`Editar cliente ${client.name}`}><Pencil className="size-3.5" /></button>}
-                        {onArchiveClient && <button onClick={e => { e.stopPropagation(); onArchiveClient(client) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-amber-500 group-hover:visible" aria-label={`Archivar cliente ${client.name}`}><Archive className="size-3.5" /></button>}
-                      </div>
-                    ))}
+                    {clients.map(client => {
+                      const receivable = clientReceivable[client.id]
+                      return (
+                        <div key={client.id} className={`${entryClass} ${activeClient === client.id ? 'bg-background shadow-sm' : 'text-muted-foreground hover:bg-background/80'}`}>
+                          <button onClick={e => { e.stopPropagation(); onSelectClient?.(client.id) }} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                            <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-primary/10 text-[10px] font-bold text-primary">{client.name.slice(0, 2).toUpperCase()}</span>
+                            <span className="truncate">{client.name}</span>
+                          </button>
+                          {onEditClient && <button onClick={e => { e.stopPropagation(); onEditClient(client) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-primary group-hover:visible" aria-label={`Editar cliente ${client.name}`}><Pencil className="size-3.5" /></button>}
+                          {onArchiveClient && <button onClick={e => { e.stopPropagation(); onArchiveClient(client) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-amber-500 group-hover:visible" aria-label={`Archivar cliente ${client.name}`}><Archive className="size-3.5" /></button>}
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </section>
