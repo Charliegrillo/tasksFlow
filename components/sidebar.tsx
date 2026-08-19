@@ -36,6 +36,7 @@ interface SidebarProps {
   highlightMilestoneId?: number | null
   onArchiveBoard?: (board: Board) => void
   onShowArchivedBoards?: () => void
+  onShowArchivedMilestones?: () => void
 }
 
 export function Sidebar({
@@ -46,7 +47,7 @@ export function Sidebar({
   spaces, activeSpace, onSelectSpace, onEditSpace, onRemoveSpace, onAddSpace, onOpenSecrets,
   boards, activeBoard, onSelectBoard, onEditBoard, onRemoveBoard, onAddBoard,
   onAddMilestone, onEditMilestone, onRemoveMilestone, onArchiveMilestone, onSelectMilestone, highlightMilestoneId,
-  onArchiveBoard, onShowArchivedBoards
+  onArchiveBoard, onShowArchivedBoards, onShowArchivedMilestones
 }: SidebarProps) {
   const [localClients, setLocalClients] = useState<Client[]>([])
   const [localMilestones, setLocalMilestones] = useState<Milestone[]>([])
@@ -249,7 +250,12 @@ export function Sidebar({
                     {collapsed ? <Flag className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.milestones ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Hitos'}
                   </button>
-                  {!collapsed && onAddMilestone && <button onClick={e => { e.stopPropagation(); onAddMilestone() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Agregar hito"><Plus className="size-4" /></button>}
+                  {!collapsed && (
+                    <div className="flex items-center gap-1">
+                      {onShowArchivedMilestones && <button onClick={e => { e.stopPropagation(); onShowArchivedMilestones() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Ver hitos archivados" title="Ver archivados"><Archive className="size-4" /></button>}
+                      {onAddMilestone && <button onClick={e => { e.stopPropagation(); onAddMilestone() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Agregar hito"><Plus className="size-4" /></button>}
+                    </div>
+                  )}
                 </div>
                 {sectionOpen.milestones && !collapsed && (
                   <div className="mt-2 flex flex-col gap-1">

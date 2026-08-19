@@ -2,31 +2,31 @@
 
 import { useState, useEffect } from 'react'
 import { X, Archive, RotateCcw } from 'lucide-react'
-import type { Board } from '@/lib/db'
+import type { Milestone } from '@/lib/db'
 
-interface ArchivedBoardsModalProps {
+interface ArchivedMilestonesModalProps {
   open: boolean
-  spaceId: number | null
+  clientId: number | null
   onClose: () => void
-  onRestore: (board: Board) => void
+  onRestore: (milestone: Milestone) => void
 }
 
-export function ArchivedBoardsModal({ open, spaceId, onClose, onRestore }: ArchivedBoardsModalProps) {
-  const [boards, setBoards] = useState<Board[]>([])
+export function ArchivedMilestonesModal({ open, clientId, onClose, onRestore }: ArchivedMilestonesModalProps) {
+  const [milestones, setMilestones] = useState<Milestone[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!open || !spaceId) return
+    if (!open || !clientId) return
     setLoading(true)
-    fetch(`/api/boards?spaceId=${spaceId}&archived=true`)
+    fetch(`/api/milestones?clientId=${clientId}&archived=true`)
       .then(r => r.json())
-      .then(d => setBoards(d.data ?? []))
+      .then(d => setMilestones(d.data ?? []))
       .finally(() => setLoading(false))
-  }, [open, spaceId])
+  }, [open, clientId])
 
-  function handleRestore(board: Board) {
-    onRestore(board)
-    setBoards(v => v.filter(b => b.id !== board.id))
+  function handleRestore(milestone: Milestone) {
+    onRestore(milestone)
+    setMilestones(v => v.filter(m => m.id !== milestone.id))
   }
 
   if (!open) return null
@@ -37,7 +37,7 @@ export function ArchivedBoardsModal({ open, spaceId, onClose, onRestore }: Archi
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Archive className="size-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">Tableros archivados</h2>
+            <h2 className="text-lg font-semibold">Hitos archivados</h2>
           </div>
           <button onClick={onClose} className="rounded-sm p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar">
             <X className="size-4" />
@@ -46,20 +46,20 @@ export function ArchivedBoardsModal({ open, spaceId, onClose, onRestore }: Archi
         <div className="mt-4">
           {loading ? (
             <p className="text-sm text-muted-foreground">Cargando...</p>
-          ) : boards.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No hay tableros archivados.</p>
+          ) : milestones.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No hay hitos archivados.</p>
           ) : (
             <div className="flex flex-col gap-2">
-              {boards.map(board => (
-                <div key={board.id} className="flex items-center justify-between rounded-sm border border-border px-3 py-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{board.name}</p>
-                    <p className="text-xs text-muted-foreground">{board.type === 'roadmap' ? 'Roadmap' : 'Mantenimiento'}</p>
+              {milestones.map(milestone => (
+                <div key={milestone.id} className="flex items-center justify-between rounded-sm border border-border px-3 py-2">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className={`size-3 shrink-0 rounded-sm ${milestone.color}`} />
+                    <p className="truncate text-sm font-medium">{milestone.name}</p>
                   </div>
                   <button
-                    onClick={() => handleRestore(board)}
+                    onClick={() => handleRestore(milestone)}
                     className="ml-2 shrink-0 rounded-sm border border-border p-1.5 text-muted-foreground transition hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-500"
-                    aria-label={`Restaurar tablero ${board.name}`}
+                    aria-label={`Restaurar hito ${milestone.name}`}
                     title="Restaurar"
                   >
                     <RotateCcw className="size-4" />
