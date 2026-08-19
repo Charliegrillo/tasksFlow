@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Sparkles, Users, Handshake, GitBranch, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Lock, Unlock, ListTodo, Flag, FolderOpen, LayoutDashboard, Eye, LogOut } from 'lucide-react'
+import { Plus, Pencil, Trash2, Sparkles, Users, Handshake, GitBranch, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Lock, Unlock, ListTodo, Flag, FolderOpen, LayoutDashboard, Eye, LogOut, Archive } from 'lucide-react'
 import type { Board, Client, CrmDeal, CrmStage, Milestone, Space, Task } from '@/lib/db'
 
 interface SidebarProps {
@@ -31,6 +31,7 @@ interface SidebarProps {
   onAddMilestone?: () => void
   onEditMilestone?: (milestone: Milestone) => void
   onRemoveMilestone?: (milestone: Milestone) => void
+  onArchiveMilestone?: (milestone: Milestone) => void
   onSelectMilestone?: (milestone: Milestone) => void
   highlightMilestoneId?: number | null
 }
@@ -42,7 +43,7 @@ export function Sidebar({
   activeClient, onSelectClient, onEditClient, onRemoveClient, onAddClient,
   spaces, activeSpace, onSelectSpace, onEditSpace, onRemoveSpace, onAddSpace, onOpenSecrets,
   boards, activeBoard, onSelectBoard, onEditBoard, onRemoveBoard, onAddBoard,
-  onAddMilestone, onEditMilestone, onRemoveMilestone, onSelectMilestone, highlightMilestoneId
+  onAddMilestone, onEditMilestone, onRemoveMilestone, onArchiveMilestone, onSelectMilestone, highlightMilestoneId
 }: SidebarProps) {
   const [localClients, setLocalClients] = useState<Client[]>([])
   const [localMilestones, setLocalMilestones] = useState<Milestone[]>([])
@@ -261,6 +262,7 @@ export function Sidebar({
                             <span className="ml-auto shrink-0 rounded-sm bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{done}/{msTasks.length}</span>
                           </button>
                           {onEditMilestone && <button onClick={e => { e.stopPropagation(); onEditMilestone(ms) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-primary group-hover:visible" aria-label={`Editar hito ${ms.name}`}><Pencil className="size-3.5" /></button>}
+                          {onArchiveMilestone && <button onClick={e => { e.stopPropagation(); onArchiveMilestone(ms) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-amber-500 group-hover:visible" aria-label={`Archivar hito ${ms.name}`}><Archive className="size-3.5" /></button>}
                           {onRemoveMilestone && <button onClick={e => { e.stopPropagation(); onRemoveMilestone(ms) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-destructive group-hover:visible" aria-label={`Eliminar hito ${ms.name}`}><Trash2 className="size-3.5" /></button>}
                         </div>
                       )
