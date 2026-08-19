@@ -15,6 +15,7 @@ import { ArchivePanel } from '@/components/archive-panel'
 import { CommentsSection } from '@/components/comments-section'
 import { ArchivedBoardsModal } from '@/components/archived-boards-modal'
 import { ArchivedMilestonesModal } from '@/components/archived-milestones-modal'
+import { ArchivedClientsModal } from '@/components/archived-clients-modal'
 import { ChecklistSection } from '@/components/checklist-section'
 import { ContactDialog } from '@/components/contact-dialog'
 import { ContactPanel } from '@/components/contact-panel'
@@ -84,6 +85,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
   const [spaceSecretsId, setSpaceSecretsId] = useState<number | null>(null)
   const [archivedBoardsOpen, setArchivedBoardsOpen] = useState(false)
   const [archivedMilestonesOpen, setArchivedMilestonesOpen] = useState(false)
+  const [archivedClientsOpen, setArchivedClientsOpen] = useState(false)
   const [contactDialog, setContactDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Contact }>({ open: false, mode: 'add' })
   const [showComments, setShowComments] = useState(false)
   const columns: Column[] = boardLists.length ? boardLists.map(list => ({ id: ({ Backlog: 'backlog', 'En progreso': 'progress', 'En revisión': 'review', Completado: 'done' } as Record<string, string>)[list.name] ?? `list-${list.id}`, dbId: list.id, title: list.name, color: list.color })) : fallbackColumns
@@ -137,6 +139,8 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
     }
   }
   async function removeClient(client: Client) { if (clients.length <= 1) return; setConfirmDialog({ open: true, title: 'Eliminar cliente', message: `¿Eliminar ${client.name}, sus espacios y tareas?`, onConfirm: async () => { const res = await fetch(`/api/clients/${client.id}`, { method: 'DELETE' }); if (!res.ok) return; const remaining = clients.filter(item => item.id !== client.id); setClients(remaining); setActiveClient(remaining[0]?.id ?? null); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function archiveClient(client: Client) { setConfirmDialog({ open: true, title: 'Archivar cliente', message: `¿Archivar el cliente ${client.name}? No se mostrará en el sidebar.`, confirmLabel: 'Archivar', variant: 'warning', onConfirm: async () => { const res = await fetch(`/api/clients/${client.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ archived: true }) }); if (!res.ok) return; setClients(v => v.filter(c => c.id !== client.id)); if (activeClient === client.id) setActiveClient(clients.find(c => c.id !== client.id)?.id ?? null); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function restoreClient(client: Client) { const res = await fetch(`/api/clients/${client.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ archived: false }) }); if (!res.ok) return; setClients(v => [...v, client]) }
   async function addSpace() { setSpaceDialog({ open: true, mode: 'add' }) }
   async function editSpace(space: Space) { setSpaceDialog({ open: true, mode: 'edit', data: space }) }
   async function handleSpaceSave(formData: { name: string; color: string; secretPassword?: string | null }) {
@@ -292,7 +296,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
 
   return <>
     <main className="min-h-screen bg-background text-foreground" onClick={() => menu && setMenu(null)}>
-    <Sidebar activeView={activeView} onSelectView={view => setActiveView(view)} crmDealCount={crmDeals.length} clients={clients} milestones={milestones} activeClient={activeClient} onSelectClient={handleSelectClient} onEditClient={editClient} onRemoveClient={removeClient} onAddClient={addClient} spaces={spaces} activeSpace={activeSpace} onSelectSpace={id => { setActiveSpace(id); setSelectedMilestoneId(null) }} onEditSpace={editSpace} onRemoveSpace={removeSpace} onAddSpace={addSpace} onOpenSecrets={(spaceId) => { setSpaceSecretsId(spaceId); setSpaceSecretsOpen(true) }} boards={boards} activeBoard={activeBoard} onSelectBoard={id => { setActiveBoard(id); setSelectedMilestoneId(null); setActiveView(null) }} onEditBoard={editBoard} onRemoveBoard={removeBoard} onAddBoard={addBoard} onArchiveBoard={archiveBoard} onAddMilestone={addMilestone} onEditMilestone={editMilestone} onRemoveMilestone={removeMilestone} onArchiveMilestone={archiveMilestone} onSelectMilestone={ms => setSelectedMilestoneId(ms.id === selectedMilestoneId ? null : ms.id)} highlightMilestoneId={selectedMilestoneId} onShowArchivedBoards={() => setArchivedBoardsOpen(true)} onShowArchivedMilestones={() => setArchivedMilestonesOpen(true)} />
+    <Sidebar activeView={activeView} onSelectView={view => setActiveView(view)} crmDealCount={crmDeals.length} clients={clients} milestones={milestones} activeClient={activeClient} onSelectClient={handleSelectClient} onEditClient={editClient} onAddClient={addClient} onArchiveClient={archiveClient} onShowArchivedClients={() => setArchivedClientsOpen(true)} spaces={spaces} activeSpace={activeSpace} onSelectSpace={id => { setActiveSpace(id); setSelectedMilestoneId(null) }} onEditSpace={editSpace} onRemoveSpace={removeSpace} onAddSpace={addSpace} onOpenSecrets={(spaceId) => { setSpaceSecretsId(spaceId); setSpaceSecretsOpen(true) }} boards={boards} activeBoard={activeBoard} onSelectBoard={id => { setActiveBoard(id); setSelectedMilestoneId(null); setActiveView(null) }} onEditBoard={editBoard} onAddBoard={addBoard} onArchiveBoard={archiveBoard} onAddMilestone={addMilestone} onEditMilestone={editMilestone} onArchiveMilestone={archiveMilestone} onSelectMilestone={ms => setSelectedMilestoneId(ms.id === selectedMilestoneId ? null : ms.id)} highlightMilestoneId={selectedMilestoneId} onShowArchivedBoards={() => setArchivedBoardsOpen(true)} onShowArchivedMilestones={() => setArchivedMilestonesOpen(true)} />
     <section className="lg:pl-64">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-5 md:px-10">
         <div className="flex items-center gap-3">
@@ -560,8 +564,9 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
     )}
     {budgetOpen && activeBoard && <BudgetPanel boardId={activeBoard} onClose={() => setBudgetOpen(false)} />}
     {spaceSecretsOpen && spaceSecretsId && <SpaceSecretsPanel spaceId={spaceSecretsId} onClose={() => { setSpaceSecretsOpen(false); setSpaceSecretsId(null) }} />}
-    <ArchivedBoardsModal open={archivedBoardsOpen} spaceId={activeSpace} onClose={() => setArchivedBoardsOpen(false)} onRestore={restoreBoard} />
-    <ArchivedMilestonesModal open={archivedMilestonesOpen} clientId={activeClient} onClose={() => setArchivedMilestonesOpen(false)} onRestore={restoreMilestone} />
+    <ArchivedBoardsModal open={archivedBoardsOpen} spaceId={activeSpace} onClose={() => setArchivedBoardsOpen(false)} onRestore={restoreBoard} onDelete={removeBoard} />
+    <ArchivedMilestonesModal open={archivedMilestonesOpen} clientId={activeClient} onClose={() => setArchivedMilestonesOpen(false)} onRestore={restoreMilestone} onDelete={removeMilestone} />
+    <ArchivedClientsModal open={archivedClientsOpen} onClose={() => setArchivedClientsOpen(false)} onRestore={restoreClient} onDelete={removeClient} />
     <ConfirmDialog open={confirmDialog.open} title={confirmDialog.title} message={confirmDialog.message} confirmLabel={confirmDialog.confirmLabel} variant={confirmDialog.variant} onConfirm={confirmDialog.onConfirm} onCancel={() => setConfirmDialog(v => ({ ...v, open: false }))} />
     <ContactDialog open={contactDialog.open} onClose={() => setContactDialog(v => ({ ...v, open: false }))} onSave={handleContactSave} initialData={contactDialog.data ? { name: contactDialog.data.name, email: contactDialog.data.email, phone: contactDialog.data.phone, company: contactDialog.data.company, position: contactDialog.data.position, address: contactDialog.data.address, website: contactDialog.data.website, notes: contactDialog.data.notes } : undefined} title={contactDialog.mode === 'add' ? 'Nuevo contacto' : 'Editar contacto'} />
     {archiveOpen && <ArchivePanel boards={boards} onClose={() => setArchiveOpen(false)} onUpdate={updateBoardPaymentStatus} />}

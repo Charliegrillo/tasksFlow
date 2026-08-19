@@ -2,37 +2,36 @@
 
 import { useState, useEffect } from 'react'
 import { X, Archive, RotateCcw, Trash2 } from 'lucide-react'
-import type { Board } from '@/lib/db'
+import type { Client } from '@/lib/db'
 
-interface ArchivedBoardsModalProps {
+interface ArchivedClientsModalProps {
   open: boolean
-  spaceId: number | null
   onClose: () => void
-  onRestore: (board: Board) => void
-  onDelete: (board: Board) => void
+  onRestore: (client: Client) => void
+  onDelete: (client: Client) => void
 }
 
-export function ArchivedBoardsModal({ open, spaceId, onClose, onRestore, onDelete }: ArchivedBoardsModalProps) {
-  const [boards, setBoards] = useState<Board[]>([])
+export function ArchivedClientsModal({ open, onClose, onRestore, onDelete }: ArchivedClientsModalProps) {
+  const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!open || !spaceId) return
+    if (!open) return
     setLoading(true)
-    fetch(`/api/boards?spaceId=${spaceId}&archived=true`)
+    fetch('/api/clients?archived=true')
       .then(r => r.json())
-      .then(d => setBoards(d.data ?? []))
+      .then(d => setClients(d.data ?? []))
       .finally(() => setLoading(false))
-  }, [open, spaceId])
+  }, [open])
 
-  function handleRestore(board: Board) {
-    onRestore(board)
-    setBoards(v => v.filter(b => b.id !== board.id))
+  function handleRestore(client: Client) {
+    onRestore(client)
+    setClients(v => v.filter(c => c.id !== client.id))
   }
 
-  function handleDelete(board: Board) {
-    onDelete(board)
-    setBoards(v => v.filter(b => b.id !== board.id))
+  function handleDelete(client: Client) {
+    onDelete(client)
+    setClients(v => v.filter(c => c.id !== client.id))
   }
 
   if (!open) return null
@@ -43,7 +42,7 @@ export function ArchivedBoardsModal({ open, spaceId, onClose, onRestore, onDelet
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Archive className="size-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">Tableros archivados</h2>
+            <h2 className="text-lg font-semibold">Clientes archivados</h2>
           </div>
           <button onClick={onClose} className="rounded-sm p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar">
             <X className="size-4" />
@@ -52,29 +51,32 @@ export function ArchivedBoardsModal({ open, spaceId, onClose, onRestore, onDelet
         <div className="mt-4">
           {loading ? (
             <p className="text-sm text-muted-foreground">Cargando...</p>
-          ) : boards.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No hay tableros archivados.</p>
+          ) : clients.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No hay clientes archivados.</p>
           ) : (
             <div className="flex flex-col gap-2">
-              {boards.map(board => (
-                <div key={board.id} className="flex items-center justify-between rounded-sm border border-border px-3 py-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{board.name}</p>
-                    <p className="text-xs text-muted-foreground">{board.type === 'roadmap' ? 'Roadmap' : 'Mantenimiento'}</p>
+              {clients.map(client => (
+                <div key={client.id} className="flex items-center justify-between rounded-sm border border-border px-3 py-2">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-primary/10 text-[10px] font-bold text-primary">{client.name.slice(0, 2).toUpperCase()}</span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{client.name}</p>
+                      {client.company && <p className="truncate text-xs text-muted-foreground">{client.company}</p>}
+                    </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <button
-                      onClick={() => handleRestore(board)}
+                      onClick={() => handleRestore(client)}
                       className="rounded-sm border border-border p-1.5 text-muted-foreground transition hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-500"
-                      aria-label={`Restaurar tablero ${board.name}`}
+                      aria-label={`Restaurar cliente ${client.name}`}
                       title="Restaurar"
                     >
                       <RotateCcw className="size-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(board)}
+                      onClick={() => handleDelete(client)}
                       className="rounded-sm border border-border p-1.5 text-muted-foreground transition hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-                      aria-label={`Eliminar tablero ${board.name}`}
+                      aria-label={`Eliminar cliente ${client.name}`}
                       title="Eliminar permanentemente"
                     >
                       <Trash2 className="size-4" />

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Archive, RotateCcw } from 'lucide-react'
+import { X, Archive, RotateCcw, Trash2 } from 'lucide-react'
 import type { Milestone } from '@/lib/db'
 
 interface ArchivedMilestonesModalProps {
@@ -9,9 +9,10 @@ interface ArchivedMilestonesModalProps {
   clientId: number | null
   onClose: () => void
   onRestore: (milestone: Milestone) => void
+  onDelete: (milestone: Milestone) => void
 }
 
-export function ArchivedMilestonesModal({ open, clientId, onClose, onRestore }: ArchivedMilestonesModalProps) {
+export function ArchivedMilestonesModal({ open, clientId, onClose, onRestore, onDelete }: ArchivedMilestonesModalProps) {
   const [milestones, setMilestones] = useState<Milestone[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -26,6 +27,11 @@ export function ArchivedMilestonesModal({ open, clientId, onClose, onRestore }: 
 
   function handleRestore(milestone: Milestone) {
     onRestore(milestone)
+    setMilestones(v => v.filter(m => m.id !== milestone.id))
+  }
+
+  function handleDelete(milestone: Milestone) {
+    onDelete(milestone)
     setMilestones(v => v.filter(m => m.id !== milestone.id))
   }
 
@@ -56,14 +62,24 @@ export function ArchivedMilestonesModal({ open, clientId, onClose, onRestore }: 
                     <span className={`size-3 shrink-0 rounded-sm ${milestone.color}`} />
                     <p className="truncate text-sm font-medium">{milestone.name}</p>
                   </div>
-                  <button
-                    onClick={() => handleRestore(milestone)}
-                    className="ml-2 shrink-0 rounded-sm border border-border p-1.5 text-muted-foreground transition hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-500"
-                    aria-label={`Restaurar hito ${milestone.name}`}
-                    title="Restaurar"
-                  >
-                    <RotateCcw className="size-4" />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => handleRestore(milestone)}
+                      className="rounded-sm border border-border p-1.5 text-muted-foreground transition hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-500"
+                      aria-label={`Restaurar hito ${milestone.name}`}
+                      title="Restaurar"
+                    >
+                      <RotateCcw className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(milestone)}
+                      className="rounded-sm border border-border p-1.5 text-muted-foreground transition hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+                      aria-label={`Eliminar hito ${milestone.name}`}
+                      title="Eliminar permanentemente"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

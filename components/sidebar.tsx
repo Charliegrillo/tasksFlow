@@ -13,8 +13,9 @@ interface SidebarProps {
   activeClient?: number | null
   onSelectClient?: (id: number) => void
   onEditClient?: (client: Client) => void
-  onRemoveClient?: (client: Client) => void
   onAddClient?: () => void
+  onArchiveClient?: (client: Client) => void
+  onShowArchivedClients?: () => void
   spaces?: Space[]
   activeSpace?: number | null
   onSelectSpace?: (id: number) => void
@@ -26,11 +27,9 @@ interface SidebarProps {
   activeBoard?: number | null
   onSelectBoard?: (id: number) => void
   onEditBoard?: (board: Board) => void
-  onRemoveBoard?: (board: Board) => void
   onAddBoard?: () => void
   onAddMilestone?: () => void
   onEditMilestone?: (milestone: Milestone) => void
-  onRemoveMilestone?: (milestone: Milestone) => void
   onArchiveMilestone?: (milestone: Milestone) => void
   onSelectMilestone?: (milestone: Milestone) => void
   highlightMilestoneId?: number | null
@@ -43,10 +42,10 @@ export function Sidebar({
   activeView, onSelectView, crmDealCount,
   clients: providedClients,
   milestones: providedMilestones,
-  activeClient, onSelectClient, onEditClient, onRemoveClient, onAddClient,
+  activeClient, onSelectClient, onEditClient, onAddClient, onArchiveClient, onShowArchivedClients,
   spaces, activeSpace, onSelectSpace, onEditSpace, onRemoveSpace, onAddSpace, onOpenSecrets,
-  boards, activeBoard, onSelectBoard, onEditBoard, onRemoveBoard, onAddBoard,
-  onAddMilestone, onEditMilestone, onRemoveMilestone, onArchiveMilestone, onSelectMilestone, highlightMilestoneId,
+  boards, activeBoard, onSelectBoard, onEditBoard, onAddBoard,
+  onAddMilestone, onEditMilestone, onArchiveMilestone, onSelectMilestone, highlightMilestoneId,
   onArchiveBoard, onShowArchivedBoards, onShowArchivedMilestones
 }: SidebarProps) {
   const [localClients, setLocalClients] = useState<Client[]>([])
@@ -226,7 +225,12 @@ export function Sidebar({
                     {collapsed ? <Users className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.clients ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Clientes'}
                   </button>
-                  {!collapsed && onAddClient && <button onClick={e => { e.stopPropagation(); onAddClient() }} className="invisible rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground group-hover/header:visible" aria-label="Agregar cliente"><Plus className="size-4" /></button>}
+                  {!collapsed && (
+                    <div className="invisible flex items-center gap-1 group-hover/header:visible">
+                      {onShowArchivedClients && <button onClick={e => { e.stopPropagation(); onShowArchivedClients() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Ver clientes archivados" title="Ver archivados"><Archive className="size-4" /></button>}
+                      {onAddClient && <button onClick={e => { e.stopPropagation(); onAddClient() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Agregar cliente"><Plus className="size-4" /></button>}
+                    </div>
+                  )}
                 </div>
                 {sectionOpen.clients && !collapsed && (
                   <div className="mt-2 flex flex-col gap-1">
@@ -237,7 +241,7 @@ export function Sidebar({
                           <span className="truncate">{client.name}</span>
                         </button>
                         {onEditClient && <button onClick={e => { e.stopPropagation(); onEditClient(client) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-primary group-hover:visible" aria-label={`Editar cliente ${client.name}`}><Pencil className="size-3.5" /></button>}
-                        {onRemoveClient && <button onClick={e => { e.stopPropagation(); onRemoveClient(client) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-destructive group-hover:visible" aria-label={`Eliminar cliente ${client.name}`}><Trash2 className="size-3.5" /></button>}
+                        {onArchiveClient && <button onClick={e => { e.stopPropagation(); onArchiveClient(client) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-amber-500 group-hover:visible" aria-label={`Archivar cliente ${client.name}`}><Archive className="size-3.5" /></button>}
                       </div>
                     ))}
                   </div>
@@ -272,7 +276,6 @@ export function Sidebar({
                           </button>
                           {onEditMilestone && <button onClick={e => { e.stopPropagation(); onEditMilestone(ms) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-primary group-hover:visible" aria-label={`Editar hito ${ms.name}`}><Pencil className="size-3.5" /></button>}
                           {onArchiveMilestone && <button onClick={e => { e.stopPropagation(); onArchiveMilestone(ms) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-amber-500 group-hover:visible" aria-label={`Archivar hito ${ms.name}`}><Archive className="size-3.5" /></button>}
-                          {onRemoveMilestone && <button onClick={e => { e.stopPropagation(); onRemoveMilestone(ms) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-destructive group-hover:visible" aria-label={`Eliminar hito ${ms.name}`}><Trash2 className="size-3.5" /></button>}
                         </div>
                       )
                     })}
@@ -339,7 +342,6 @@ export function Sidebar({
                         </button>
                         {onEditBoard && <button onClick={e => { e.stopPropagation(); onEditBoard(board) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-primary group-hover:visible" aria-label={`Editar tablero ${board.name}`}><Pencil className="size-3.5" /></button>}
                         {onArchiveBoard && <button onClick={e => { e.stopPropagation(); onArchiveBoard(board) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-amber-500 group-hover:visible" aria-label={`Archivar tablero ${board.name}`}><Archive className="size-3.5" /></button>}
-                        {onRemoveBoard && <button onClick={e => { e.stopPropagation(); onRemoveBoard(board) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-destructive group-hover:visible" aria-label={`Eliminar tablero ${board.name}`}><Trash2 className="size-3.5" /></button>}
                       </div>
                     ))}
                   </div>
