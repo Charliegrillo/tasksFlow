@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Sparkles, Users, Handshake, GitBranch, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Lock, Unlock, ListTodo, Flag, FolderOpen, LayoutDashboard, Eye } from 'lucide-react'
+import { Plus, Pencil, Trash2, Sparkles, Users, Handshake, GitBranch, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Lock, Unlock, ListTodo, Flag, FolderOpen, LayoutDashboard, Eye, LogOut } from 'lucide-react'
 import type { Board, Client, CrmDeal, CrmStage, Milestone, Space, Task } from '@/lib/db'
 
 interface SidebarProps {
@@ -146,15 +146,29 @@ export function Sidebar({
             </div>
             {!collapsed && <span className="text-lg font-semibold tracking-tight">Taskflow</span>}
           </div>
-          <button
-            type="button"
-            onClick={() => setCollapsed(prev => !prev)}
-            className="rounded-sm border border-border bg-background/80 p-1.5 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground"
-            aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
-          >
-            {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-          </button>
+          {!collapsed && (
+            <button
+              type="button"
+              onClick={() => setCollapsed(prev => !prev)}
+              className="rounded-sm border border-border bg-background/80 p-1.5 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground"
+              aria-label="Colapsar sidebar"
+            >
+              <PanelLeftClose className="size-4" />
+            </button>
+          )}
         </div>
+        {collapsed && (
+          <div className="flex flex-col items-center gap-2 border-b border-border/80 pb-4">
+            <button
+              type="button"
+              onClick={() => setCollapsed(prev => !prev)}
+              className="rounded-sm border border-border bg-background/80 p-1.5 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground"
+              aria-label="Expandir sidebar"
+            >
+              <PanelLeftOpen className="size-4" />
+            </button>
+          </div>
+        )}
 
         <div className="sidebar-scroll mt-5 flex-1 overflow-y-auto overflow-x-hidden pr-1">
           <div className="mb-3 flex items-center gap-1 rounded-md bg-secondary/50 p-1" role="tablist" aria-label="Navegación principal">
@@ -327,6 +341,18 @@ export function Sidebar({
             </div>
           </div>
         )}
+
+        <div className="mt-auto pt-4 shrink-0">
+          <button
+            type="button"
+            onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/login' }}
+            className={`flex items-center justify-center gap-2 rounded-sm border border-border bg-background/80 text-muted-foreground transition hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive ${collapsed ? 'w-full justify-center p-2' : 'w-full px-3 py-2'}`}
+            aria-label="Cerrar sesión"
+          >
+            <LogOut className="size-4" />
+            {!collapsed && <span className="text-sm">Cerrar sesión</span>}
+          </button>
+        </div>
       </div>
     </aside>
   )

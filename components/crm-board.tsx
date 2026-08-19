@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Settings, Trash2 } from 'lucide-react'
+import { GripVertical, Plus, Settings, Trash2 } from 'lucide-react'
 import type { Contact, CrmDeal, CrmInteraction, CrmStage } from '@/lib/db'
 import { CrmDealCard } from './crm-deal-card'
 import { CrmStageDialog } from './crm-stage-dialog'
@@ -20,30 +20,41 @@ type CrmBoardProps = {
   onDeleteDeal: (dealId: number) => void
   onAddStage: (name: string, color: string) => void
   onDeleteStage: (id: number) => void
+  onMoveStage: (id: number, position: number) => void
   onAddInteraction: (dealId: number, type: CrmInteraction['type'], description: string, date: string) => void
   onDeleteInteraction: (id: number) => void
   onRefreshInteractions: (dealId: number) => void
   onAddContact: () => void
 }
 
-export function CrmBoard({ stages, deals, contacts, interactions, onAddDeal, onMoveDeal, onDeleteDeal, onAddStage, onDeleteStage, onAddInteraction, onDeleteInteraction, onRefreshInteractions, onAddContact }: CrmBoardProps) {
+export function CrmBoard({ stages, deals, contacts, interactions, onAddDeal, onMoveDeal, onDeleteDeal, onAddStage, onDeleteStage, onMoveStage, onAddInteraction, onDeleteInteraction, onRefreshInteractions, onAddContact }: CrmBoardProps) {
   const [stageDialog, setStageDialog] = useState<{ open: boolean; edit?: CrmStage }>({ open: false })
   const [interactionDialog, setInteractionDialog] = useState<{ open: boolean; dealId: number | null }>({ open: false, dealId: null })
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({ open: false, title: '', message: '', onConfirm: () => {} })
   const [dragOverStage, setDragOverStage] = useState<number | null>(null)
+  const [draggingStageId, setDraggingStageId] = useState<number | null>(null)
   const [contactSelectStageId, setContactSelectStageId] = useState<number | null>(null)
   const [dealDialog, setDealDialog] = useState<{ open: boolean; dealId: number | null }>({ open: false, dealId: null })
   const selectedDeal = dealDialog.dealId !== null ? deals.find(deal => deal.id === dealDialog.dealId) ?? null : null
 
   function handleDragOver(e: React.DragEvent, stageId: number) {
     e.preventDefault()
+    if (draggingStageId !== null) {
+      e.dataTransfer.dropEffect = 'move'
+    }
     setDragOverStage(stageId)
   }
 
   function handleDrop(e: React.DragEvent, stageId: number) {
     e.preventDefault()
-    const dealId = Number(e.dataTransfer.getData('text/plain'))
-    if (dealId) onMoveDeal(dealId, stageId)
+    if (draggingStageId !== null) {
+      const targetIndex = stages.findIndex(s => s.id === stageId)
+      if (targetIndex !== -1) onMoveStage(draggingStageId, targetIndex)
+      setDraggingStageId(null)
+    } else {
+      const dealId = Number(e.dataTransfer.getData('text/plain'))
+      if (dealId) onMoveDeal(dealId, stageId)
+    }
     setDragOverStage(null)
   }
 
@@ -68,14 +79,30 @@ export function CrmBoard({ stages, deals, contacts, interactions, onAddDeal, onM
         {stages.map(stage => {
           const stageDeals = deals.filter(d => d.stageId === stage.id)
           return (
-            <div key={stage.id} onDragOver={e => handleDragOver(e, stage.id)} onDragLeave={() => setDragOverStage(null)} onDrop={e => handleDrop(e, stage.id)} className={`flex w-[300px] min-w-[300px] flex-col rounded-sm p-2 transition-colors ${dragOverStage === stage.id ? 'bg-secondary/70' : ''}`}>
-              <div className="mb-3 flex items-center justify-between">
+            <div
+              key={stage.id}
+              onDragOver={e => handleDragOver(e, stage.id)}
+              onDragLeave={() => setDragOverStage(null)}
+              onDrop={e => handleDrop(e, stage.id)}
+              className={`flex w-[300px] min-w-[300px] flex-col rounded-sm p-2 transition-colors ${dragOverStage === stage.id && draggingStageId !== null ? 'ring-2 ring-primary/50' : ''} ${dragOverStage === stage.id && draggingStageId === null ? 'bg-secondary/70' : ''}`}
+            >
+              <div
+                draggable
+                onDragStart={e => {
+                  e.dataTransfer.effectAllowed = 'move'
+                  e.dataTransfer.setData('text/plain', '')
+                  setDraggingStageId(stage.id)
+                }}
+                onDragEnd={() => { setDraggingStageId(null); setDragOverStage(null) }}
+                className={`mb-3 flex cursor-grab items-center justify-between rounded-sm px-1 py-1 transition-colors ${draggingStageId === stage.id ? 'opacity-50' : 'hover:bg-secondary/50'}`}
+              >
                 <div className="flex items-center gap-2">
+                  <GripVertical className="size-3.5 text-muted-foreground" />
                   <span className={`size-2.5 rounded-sm ${stage.color}`} />
                   <h3 className="text-sm font-semibold">{stage.name}</h3>
                   <span className="rounded-md bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">{stageDeals.length}</span>
                 </div>
-                <button onClick={() => { setConfirmDialog({ open: true, title: 'Eliminar etapa', message: `Ã‚Â¿Eliminar la etapa "${stage.name}" y sus deals?`, onConfirm: () => { onDeleteStage(stage.id); setConfirmDialog(v => ({ ...v, open: false })) } }) }} className="rounded p-1 text-muted-foreground hover:text-destructive"><Trash2 className="size-3.5" /></button>
+                <button onClick={e => { e.stopPropagation(); setConfirmDialog({ open: true, title: 'Eliminar etapa', message: `¿Eliminar la etapa "${stage.name}" y sus deals?`, onConfirm: () => { onDeleteStage(stage.id); setConfirmDialog(v => ({ ...v, open: false })) } }) }} className="rounded p-1 text-muted-foreground hover:text-destructive"><Trash2 className="size-3.5" /></button>
               </div>
               <div className="flex flex-1 flex-col gap-3">
                 {stageDeals.map(deal => (
