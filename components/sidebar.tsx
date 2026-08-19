@@ -199,23 +199,20 @@ export function Sidebar({
           </div>
 
           {sidebarTab === 'crm' ? (
-            <div className="space-y-5">
-              <div className={`transition ${activeView === 'contacts' || activeView === 'pipelines' || activeView === 'crm' ? 'text-foreground  mb-05' : 'text-muted-foreground hover:bg-secondary/80'}`}>
-                <button onClick={() => onSelectView?.('contacts')} className="flex items-center justify-between gap-2 px-2 hover:bg-background hover:text-foreground w-full p-2 rounded-md text-left cursor-pointer">
-                  <span className={`flex items-center gap-2 text-[11px] tracking-[0.12em] ${collapsed ? 'justify-center w-full' : ''}`}>
-                    <Users className="size-3.5" />
-                    {!collapsed && 'Contactos'}
-                  </span>
-                  {!collapsed && crmDealCount !== undefined && <span className="px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{crmDealCount}</span>}
-                </button>
-
-                <button onClick={() => onSelectView?.('pipelines')} className="flex items-center justify-between gap-2 px-2 hover:bg-background hover:text-foreground w-full p-2 rounded-md text-left cursor-pointer transition">
-                  <span className={`flex items-center gap-2 text-[11px] tracking-[0.12em] ${collapsed ? 'justify-center w-full' : ''}`}>
-                    <GitBranch className="size-3.5" />
+            <div className="space-y-3">
+              <section>
+                <div className="mt-2 flex flex-col gap-1">
+                  <button onClick={() => onSelectView?.('contacts')} className={`${entryClass} ${activeView === 'contacts' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:bg-background/80'}`}>
+                    <Users className="size-4" />
+                    {!collapsed && <span className="truncate">Contactos</span>}
+                    {!collapsed && crmDealCount !== undefined && <span className="ml-auto shrink-0 rounded-sm bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{crmDealCount}</span>}
+                  </button>
+                  <button onClick={() => onSelectView?.('pipelines')} className={`${entryClass} ${activeView === 'pipelines' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:bg-background/80'}`}>
+                    <GitBranch className="size-4" />
                     {!collapsed && <span className="truncate">Pipelines</span>}
-                  </span>
-                </button>
-              </div>
+                  </button>
+                </div>
+              </section>
             </div>
           ) : (
             <div className="space-y-3">
