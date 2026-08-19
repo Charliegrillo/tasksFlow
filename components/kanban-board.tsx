@@ -13,6 +13,7 @@ import { BudgetPanel } from '@/components/budget-panel'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ArchivePanel } from '@/components/archive-panel'
 import { CommentsSection } from '@/components/comments-section'
+import { ArchivedBoardsModal } from '@/components/archived-boards-modal'
 import { ChecklistSection } from '@/components/checklist-section'
 import { ContactDialog } from '@/components/contact-dialog'
 import { ContactPanel } from '@/components/contact-panel'
@@ -67,7 +68,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
   const [boardDialog, setBoardDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Board }>({ open: false, mode: 'add' })
   const [milestones, setMilestones] = useState<Milestone[]>([])
   const [milestoneDialog, setMilestoneDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Milestone }>({ open: false, mode: 'add' })
-  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({ open: false, title: '', message: '', onConfirm: () => {} })
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; message: string; confirmLabel?: string; variant?: 'destructive' | 'warning'; onConfirm: () => void }>({ open: false, title: '', message: '', onConfirm: () => {} })
   const [allBoards, setAllBoards] = useState<Board[]>([])
   const [budgetOpen, setBudgetOpen] = useState(false)
   const [detailTab, setDetailTab] = useState<'details' | 'checklists' | 'attachments'>('details')
@@ -80,6 +81,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
   const [activeView, setActiveView] = useState<'board' | 'crm' | 'contacts' | 'pipelines' | null>(null)
   const [spaceSecretsOpen, setSpaceSecretsOpen] = useState(false)
   const [spaceSecretsId, setSpaceSecretsId] = useState<number | null>(null)
+  const [archivedBoardsOpen, setArchivedBoardsOpen] = useState(false)
   const [contactDialog, setContactDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Contact }>({ open: false, mode: 'add' })
   const [showComments, setShowComments] = useState(false)
   const columns: Column[] = boardLists.length ? boardLists.map(list => ({ id: ({ Backlog: 'backlog', 'En progreso': 'progress', 'En revisión': 'review', Completado: 'done' } as Record<string, string>)[list.name] ?? `list-${list.id}`, dbId: list.id, title: list.name, color: list.color })) : fallbackColumns
@@ -184,7 +186,9 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
     }
   }
   async function removeMilestone(milestone: Milestone) { setConfirmDialog({ open: true, title: 'Eliminar hito', message: `¿Eliminar el hito ${milestone.name}?`, onConfirm: async () => { const res = await fetch(`/api/milestones/${milestone.id}`, { method: 'DELETE' }); if (!res.ok) return; setMilestones(v => v.filter(m => m.id !== milestone.id)); setTasks(v => v.map(t => t.milestoneId === milestone.id ? { ...t, milestoneId: null } : t)); setConfirmDialog(v => ({ ...v, open: false })) } }) }
-  async function archiveMilestone(milestone: Milestone) { setConfirmDialog({ open: true, title: 'Archivar hito', message: `¿Archivar el hito ${milestone.name}? No se mostrará en el sidebar.`, confirmLabel: 'Archivar', onConfirm: async () => { const res = await fetch(`/api/milestones/${milestone.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ archived: true }) }); if (!res.ok) return; setMilestones(v => v.filter(m => m.id !== milestone.id)); if (selectedMilestoneId === milestone.id) setSelectedMilestoneId(null); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function archiveMilestone(milestone: Milestone) { setConfirmDialog({ open: true, title: 'Archivar hito', message: `¿Archivar el hito ${milestone.name}? No se mostrará en el sidebar.`, confirmLabel: 'Archivar', variant: 'warning', onConfirm: async () => { const res = await fetch(`/api/milestones/${milestone.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ archived: true }) }); if (!res.ok) return; setMilestones(v => v.filter(m => m.id !== milestone.id)); if (selectedMilestoneId === milestone.id) setSelectedMilestoneId(null); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function archiveBoard(board: Board) { setConfirmDialog({ open: true, title: 'Archivar tablero', message: `¿Archivar el tablero ${board.name}? No se mostrará en el sidebar.`, confirmLabel: 'Archivar', variant: 'warning', onConfirm: async () => { const res = await fetch(`/api/boards/${board.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ archived: true }) }); if (!res.ok) return; setBoards(v => v.filter(b => b.id !== board.id)); setAllBoards(v => v.filter(b => b.id !== board.id)); if (activeBoard === board.id) setActiveBoard(boards.find(b => b.id !== board.id)?.id ?? null); setConfirmDialog(v => ({ ...v, open: false })) } }) }
+  async function restoreBoard(board: Board) { const res = await fetch(`/api/boards/${board.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ archived: false }) }); if (!res.ok) return; setBoards(v => [...v, board]); setAllBoards(v => [...v, board]) }
   async function addBoardList() { if (!activeBoard) return; setNewListDialog({ open: true, name: '' }) }
   async function submitBoardList() {
     if (!activeBoard) return
@@ -285,7 +289,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
 
   return <>
     <main className="min-h-screen bg-background text-foreground" onClick={() => menu && setMenu(null)}>
-    <Sidebar activeView={activeView} onSelectView={view => setActiveView(view)} crmDealCount={crmDeals.length} clients={clients} milestones={milestones} activeClient={activeClient} onSelectClient={handleSelectClient} onEditClient={editClient} onRemoveClient={removeClient} onAddClient={addClient} spaces={spaces} activeSpace={activeSpace} onSelectSpace={id => { setActiveSpace(id); setSelectedMilestoneId(null) }} onEditSpace={editSpace} onRemoveSpace={removeSpace} onAddSpace={addSpace} onOpenSecrets={(spaceId) => { setSpaceSecretsId(spaceId); setSpaceSecretsOpen(true) }} boards={boards} activeBoard={activeBoard} onSelectBoard={id => { setActiveBoard(id); setSelectedMilestoneId(null); setActiveView(null) }} onEditBoard={editBoard} onRemoveBoard={removeBoard} onAddBoard={addBoard} onAddMilestone={addMilestone} onEditMilestone={editMilestone} onRemoveMilestone={removeMilestone} onArchiveMilestone={archiveMilestone} onSelectMilestone={ms => setSelectedMilestoneId(ms.id === selectedMilestoneId ? null : ms.id)} highlightMilestoneId={selectedMilestoneId} />
+    <Sidebar activeView={activeView} onSelectView={view => setActiveView(view)} crmDealCount={crmDeals.length} clients={clients} milestones={milestones} activeClient={activeClient} onSelectClient={handleSelectClient} onEditClient={editClient} onRemoveClient={removeClient} onAddClient={addClient} spaces={spaces} activeSpace={activeSpace} onSelectSpace={id => { setActiveSpace(id); setSelectedMilestoneId(null) }} onEditSpace={editSpace} onRemoveSpace={removeSpace} onAddSpace={addSpace} onOpenSecrets={(spaceId) => { setSpaceSecretsId(spaceId); setSpaceSecretsOpen(true) }} boards={boards} activeBoard={activeBoard} onSelectBoard={id => { setActiveBoard(id); setSelectedMilestoneId(null); setActiveView(null) }} onEditBoard={editBoard} onRemoveBoard={removeBoard} onAddBoard={addBoard} onArchiveBoard={archiveBoard} onAddMilestone={addMilestone} onEditMilestone={editMilestone} onRemoveMilestone={removeMilestone} onArchiveMilestone={archiveMilestone} onSelectMilestone={ms => setSelectedMilestoneId(ms.id === selectedMilestoneId ? null : ms.id)} highlightMilestoneId={selectedMilestoneId} onShowArchivedBoards={() => setArchivedBoardsOpen(true)} />
     <section className="lg:pl-64">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-5 md:px-10">
         <div className="flex items-center gap-3">
@@ -553,7 +557,8 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
     )}
     {budgetOpen && activeBoard && <BudgetPanel boardId={activeBoard} onClose={() => setBudgetOpen(false)} />}
     {spaceSecretsOpen && spaceSecretsId && <SpaceSecretsPanel spaceId={spaceSecretsId} onClose={() => { setSpaceSecretsOpen(false); setSpaceSecretsId(null) }} />}
-    <ConfirmDialog open={confirmDialog.open} title={confirmDialog.title} message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onCancel={() => setConfirmDialog(v => ({ ...v, open: false }))} />
+    <ArchivedBoardsModal open={archivedBoardsOpen} spaceId={activeSpace} onClose={() => setArchivedBoardsOpen(false)} onRestore={restoreBoard} />
+    <ConfirmDialog open={confirmDialog.open} title={confirmDialog.title} message={confirmDialog.message} confirmLabel={confirmDialog.confirmLabel} variant={confirmDialog.variant} onConfirm={confirmDialog.onConfirm} onCancel={() => setConfirmDialog(v => ({ ...v, open: false }))} />
     <ContactDialog open={contactDialog.open} onClose={() => setContactDialog(v => ({ ...v, open: false }))} onSave={handleContactSave} initialData={contactDialog.data ? { name: contactDialog.data.name, email: contactDialog.data.email, phone: contactDialog.data.phone, company: contactDialog.data.company, position: contactDialog.data.position, address: contactDialog.data.address, website: contactDialog.data.website, notes: contactDialog.data.notes } : undefined} title={contactDialog.mode === 'add' ? 'Nuevo contacto' : 'Editar contacto'} />
     {archiveOpen && <ArchivePanel boards={boards} onClose={() => setArchiveOpen(false)} onUpdate={updateBoardPaymentStatus} />}
   </>

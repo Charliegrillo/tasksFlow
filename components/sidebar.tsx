@@ -34,6 +34,8 @@ interface SidebarProps {
   onArchiveMilestone?: (milestone: Milestone) => void
   onSelectMilestone?: (milestone: Milestone) => void
   highlightMilestoneId?: number | null
+  onArchiveBoard?: (board: Board) => void
+  onShowArchivedBoards?: () => void
 }
 
 export function Sidebar({
@@ -43,7 +45,8 @@ export function Sidebar({
   activeClient, onSelectClient, onEditClient, onRemoveClient, onAddClient,
   spaces, activeSpace, onSelectSpace, onEditSpace, onRemoveSpace, onAddSpace, onOpenSecrets,
   boards, activeBoard, onSelectBoard, onEditBoard, onRemoveBoard, onAddBoard,
-  onAddMilestone, onEditMilestone, onRemoveMilestone, onArchiveMilestone, onSelectMilestone, highlightMilestoneId
+  onAddMilestone, onEditMilestone, onRemoveMilestone, onArchiveMilestone, onSelectMilestone, highlightMilestoneId,
+  onArchiveBoard, onShowArchivedBoards
 }: SidebarProps) {
   const [localClients, setLocalClients] = useState<Client[]>([])
   const [localMilestones, setLocalMilestones] = useState<Milestone[]>([])
@@ -314,7 +317,12 @@ export function Sidebar({
                     {collapsed ? <LayoutDashboard className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.boards ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Tableros'}
                   </button>
-                  {!collapsed && onAddBoard && <button onClick={e => { e.stopPropagation(); onAddBoard() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Agregar tablero"><Plus className="size-4" /></button>}
+                  {!collapsed && (
+                    <div className="flex items-center gap-1">
+                      {onShowArchivedBoards && <button onClick={e => { e.stopPropagation(); onShowArchivedBoards() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Ver tableros archivados" title="Ver archivados"><Archive className="size-4" /></button>}
+                      {onAddBoard && <button onClick={e => { e.stopPropagation(); onAddBoard() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Agregar tablero"><Plus className="size-4" /></button>}
+                    </div>
+                  )}
                 </div>
                 {sectionOpen.boards && !collapsed && (
                   <div className="mt-2 flex flex-col gap-1">
@@ -324,6 +332,7 @@ export function Sidebar({
                           <span className="truncate">{board.name}</span>
                         </button>
                         {onEditBoard && <button onClick={e => { e.stopPropagation(); onEditBoard(board) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-primary group-hover:visible" aria-label={`Editar tablero ${board.name}`}><Pencil className="size-3.5" /></button>}
+                        {onArchiveBoard && <button onClick={e => { e.stopPropagation(); onArchiveBoard(board) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-amber-500 group-hover:visible" aria-label={`Archivar tablero ${board.name}`}><Archive className="size-3.5" /></button>}
                         {onRemoveBoard && <button onClick={e => { e.stopPropagation(); onRemoveBoard(board) }} className="invisible rounded-md p-1 text-muted-foreground hover:text-destructive group-hover:visible" aria-label={`Eliminar tablero ${board.name}`}><Trash2 className="size-3.5" /></button>}
                       </div>
                     ))}
