@@ -221,12 +221,12 @@ export function Sidebar({
           ) : (
             <div className="space-y-3">
               <section>
-                <div className="flex items-center justify-between rounded-sm px-1.5 py-2">
+                <div className="group/header flex items-center justify-between rounded-sm px-1.5 py-2">
                   <button type="button" onClick={() => toggleSection('clients')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-sm hover:bg-background/80 transition' : ''}`} title="Clientes">
                     {collapsed ? <Users className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.clients ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Clientes'}
                   </button>
-                  {!collapsed && onAddClient && <button onClick={e => { e.stopPropagation(); onAddClient() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Agregar cliente"><Plus className="size-4" /></button>}
+                  {!collapsed && onAddClient && <button onClick={e => { e.stopPropagation(); onAddClient() }} className="invisible rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground group-hover/header:visible" aria-label="Agregar cliente"><Plus className="size-4" /></button>}
                 </div>
                 {sectionOpen.clients && !collapsed && (
                   <div className="mt-2 flex flex-col gap-1">
@@ -245,13 +245,13 @@ export function Sidebar({
               </section>
 
               <section>
-                <div className="flex items-center justify-between rounded-sm px-1.5 py-2">
+                <div className="group/header flex items-center justify-between rounded-sm px-1.5 py-2">
                   <button type="button" onClick={() => toggleSection('milestones')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-sm hover:bg-background/80 transition' : ''}`} title="Hitos">
                     {collapsed ? <Flag className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.milestones ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Hitos'}
                   </button>
                   {!collapsed && (
-                    <div className="flex items-center gap-1">
+                    <div className="invisible flex items-center gap-1 group-hover/header:visible">
                       {onShowArchivedMilestones && <button onClick={e => { e.stopPropagation(); onShowArchivedMilestones() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Ver hitos archivados" title="Ver archivados"><Archive className="size-4" /></button>}
                       {onAddMilestone && <button onClick={e => { e.stopPropagation(); onAddMilestone() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Agregar hito"><Plus className="size-4" /></button>}
                     </div>
@@ -281,12 +281,12 @@ export function Sidebar({
               </section>
 
               {(activeClient || visibleSpaces.length > 0) && <section>
-                <div className="flex items-center justify-between rounded-sm px-1.5 py-2">
+                <div className="group/header flex items-center justify-between rounded-sm px-1.5 py-2">
                   <button type="button" onClick={() => toggleSection('spaces')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-sm hover:bg-background/80 transition' : ''}`} title="Espacios">
                     {collapsed ? <FolderOpen className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.spaces ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Espacios'}
                   </button>
-                  {!collapsed && onAddSpace && <button onClick={e => { e.stopPropagation(); onAddSpace() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Agregar espacio"><Plus className="size-4" /></button>}
+                  {!collapsed && onAddSpace && <button onClick={e => { e.stopPropagation(); onAddSpace() }} className="invisible rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground group-hover/header:visible" aria-label="Agregar espacio"><Plus className="size-4" /></button>}
                 </div>
                 {sectionOpen.spaces && !collapsed && (
                   <div className="mt-2 flex flex-col gap-1">
@@ -318,13 +318,13 @@ export function Sidebar({
               </section>}
 
               {(activeSpace || visibleBoards.length > 0) && <section>
-                <div className="flex items-center justify-between rounded-sm px-1.5 py-2">
+                <div className="group/header flex items-center justify-between rounded-sm px-1.5 py-2">
                   <button type="button" onClick={() => toggleSection('boards')} className={`${sectionLabelClass} ${collapsed ? 'w-full justify-center p-2 rounded-sm hover:bg-background/80 transition' : ''}`} title="Tableros">
                     {collapsed ? <LayoutDashboard className="size-4" /> : <ChevronRight className={`size-3.5 transition-transform ${sectionOpen.boards ? 'rotate-90' : ''}`} />}
                     {!collapsed && 'Tableros'}
                   </button>
                   {!collapsed && (
-                    <div className="flex items-center gap-1">
+                    <div className="invisible flex items-center gap-1 group-hover/header:visible">
                       {onShowArchivedBoards && <button onClick={e => { e.stopPropagation(); onShowArchivedBoards() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Ver tableros archivados" title="Ver archivados"><Archive className="size-4" /></button>}
                       {onAddBoard && <button onClick={e => { e.stopPropagation(); onAddBoard() }} className="rounded-md p-1.5 text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Agregar tablero"><Plus className="size-4" /></button>}
                     </div>
