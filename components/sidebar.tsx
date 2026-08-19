@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Sparkles, Users, Handshake, GitBranch, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Lock, Unlock, ListTodo, Flag, FolderOpen, LayoutDashboard, Eye, LogOut, Archive } from 'lucide-react'
+import { Plus, Pencil, Trash2, Sparkles, Users, Handshake, GitBranch, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Lock, Unlock, ListTodo, Flag, FolderOpen, LayoutDashboard, Eye, LogOut, Archive, X } from 'lucide-react'
 import type { Board, Client, CrmDeal, CrmStage, Milestone, Space, Task } from '@/lib/db'
 
 interface SidebarProps {
@@ -36,6 +36,7 @@ interface SidebarProps {
   onArchiveBoard?: (board: Board) => void
   onShowArchivedBoards?: () => void
   onShowArchivedMilestones?: () => void
+  onCollapsedChange?: (collapsed: boolean) => void
 }
 
 export function Sidebar({
@@ -46,7 +47,7 @@ export function Sidebar({
   spaces, activeSpace, onSelectSpace, onEditSpace, onRemoveSpace, onAddSpace, onOpenSecrets,
   boards, activeBoard, onSelectBoard, onEditBoard, onAddBoard,
   onAddMilestone, onEditMilestone, onArchiveMilestone, onSelectMilestone, highlightMilestoneId,
-  onArchiveBoard, onShowArchivedBoards, onShowArchivedMilestones
+  onArchiveBoard, onShowArchivedBoards, onShowArchivedMilestones, onCollapsedChange
 }: SidebarProps) {
   const [localClients, setLocalClients] = useState<Client[]>([])
   const [localMilestones, setLocalMilestones] = useState<Milestone[]>([])
@@ -133,6 +134,8 @@ export function Sidebar({
     }
   }, [activeSpace, boards, localSpaces])
 
+  useEffect(() => { onCollapsedChange?.(collapsed) }, [collapsed, onCollapsedChange])
+
   const completed = tasks.filter(t => t.status === 'done').length
   const visibleSpaces = activeClient ? effectiveSpaces.filter(s => s.clientId === activeClient) : effectiveSpaces
   const visibleBoards = activeSpace ? effectiveBoards.filter(b => b.spaceId === activeSpace) : effectiveBoards
@@ -141,13 +144,18 @@ export function Sidebar({
   const entryClass = 'group flex items-center gap-2 rounded-sm px-2.5 py-2 text-sm font-medium transition-colors'
 
   return (
+    <>
+    <div onClick={() => { const sidebar = document.querySelector('aside'); sidebar?.classList.add('-translate-x-full') }} className="fixed inset-0 z-30 bg-black/50 -translate-x-full lg:hidden" id="sidebar-overlay" />
     <aside className={`fixed inset-y-0 left-0 z-40 border-r border-border bg-card/95 backdrop-blur-sm shadow-[0_0_0_1px_rgba(15,23,42,0.02)] transition-all duration-300 flex flex-col -translate-x-full lg:translate-x-0 ${collapsed ? 'w-24' : 'w-72'}`}>
       <div className="flex h-full w-full flex-col px-3 py-4">
-        <div className={`flex items-center gap-3 border-b border-border/80 pb-4 ${collapsed ? 'justify-center' : ''}`}>
-          <div className="grid size-9 place-items-center rounded-sm bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm ring-1 ring-primary/20">
-            <Sparkles className="size-4" />
+        <div className={`flex items-center justify-between gap-3 border-b border-border/80 pb-4 ${collapsed ? 'justify-center' : ''}`}>
+          <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
+            <div className="grid size-9 place-items-center rounded-sm bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm ring-1 ring-primary/20">
+              <Sparkles className="size-4" />
+            </div>
+            {!collapsed && <span className="text-lg font-semibold tracking-tight">Taskflow</span>}
           </div>
-          {!collapsed && <span className="text-lg font-semibold tracking-tight">Taskflow</span>}
+          <button type="button" onClick={() => { const sidebar = document.querySelector('aside'); sidebar?.classList.add('-translate-x-full'); document.getElementById('sidebar-overlay')?.classList.add('-translate-x-full') }} className="lg:hidden rounded-sm p-1.5 text-muted-foreground hover:bg-secondary" aria-label="Cerrar menú"><X className="size-4" /></button>
         </div>
 
         <div className="sidebar-scroll mt-5 flex-1 overflow-y-auto overflow-x-hidden pr-1">
@@ -349,11 +357,12 @@ export function Sidebar({
       <button
         type="button"
         onClick={() => setCollapsed(prev => !prev)}
-        className="absolute right-0 top-4 -translate-y-0 translate-x-1/2 z-50 rounded-full border border-border bg-card p-1.5 text-muted-foreground shadow-md transition hover:border-primary/30 hover:bg-secondary hover:text-foreground"
+        className="hidden lg:block absolute right-0 top-4 -translate-y-0 translate-x-1/2 z-50 rounded-full border border-border bg-card p-1.5 text-muted-foreground shadow-md transition hover:border-primary/30 hover:bg-secondary hover:text-foreground"
         aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
       >
         {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
       </button>
     </aside>
+    </>
   )
 }

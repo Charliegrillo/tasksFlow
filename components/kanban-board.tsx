@@ -86,6 +86,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
   const [archivedBoardsOpen, setArchivedBoardsOpen] = useState(false)
   const [archivedMilestonesOpen, setArchivedMilestonesOpen] = useState(false)
   const [archivedClientsOpen, setArchivedClientsOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [contactDialog, setContactDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Contact }>({ open: false, mode: 'add' })
   const [showComments, setShowComments] = useState(false)
   const columns: Column[] = boardLists.length ? boardLists.map(list => ({ id: ({ Backlog: 'backlog', 'En progreso': 'progress', 'En revisión': 'review', Completado: 'done' } as Record<string, string>)[list.name] ?? `list-${list.id}`, dbId: list.id, title: list.name, color: list.color })) : fallbackColumns
@@ -296,16 +297,18 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
 
   return <>
     <main className="min-h-screen bg-background text-foreground" onClick={() => menu && setMenu(null)}>
-    <Sidebar activeView={activeView} onSelectView={view => setActiveView(view)} crmDealCount={crmDeals.length} clients={clients} milestones={milestones} activeClient={activeClient} onSelectClient={handleSelectClient} onEditClient={editClient} onAddClient={addClient} onArchiveClient={archiveClient} onShowArchivedClients={() => setArchivedClientsOpen(true)} spaces={spaces} activeSpace={activeSpace} onSelectSpace={id => { setActiveSpace(id); setSelectedMilestoneId(null) }} onEditSpace={editSpace} onRemoveSpace={removeSpace} onAddSpace={addSpace} onOpenSecrets={(spaceId) => { setSpaceSecretsId(spaceId); setSpaceSecretsOpen(true) }} boards={boards} activeBoard={activeBoard} onSelectBoard={id => { setActiveBoard(id); setSelectedMilestoneId(null); setActiveView(null) }} onEditBoard={editBoard} onAddBoard={addBoard} onArchiveBoard={archiveBoard} onAddMilestone={addMilestone} onEditMilestone={editMilestone} onArchiveMilestone={archiveMilestone} onSelectMilestone={ms => setSelectedMilestoneId(ms.id === selectedMilestoneId ? null : ms.id)} highlightMilestoneId={selectedMilestoneId} onShowArchivedBoards={() => setArchivedBoardsOpen(true)} onShowArchivedMilestones={() => setArchivedMilestonesOpen(true)} />
-    <section className="lg:pl-64">
+    <Sidebar activeView={activeView} onSelectView={view => setActiveView(view)} crmDealCount={crmDeals.length} clients={clients} milestones={milestones} activeClient={activeClient} onSelectClient={handleSelectClient} onEditClient={editClient} onAddClient={addClient} onArchiveClient={archiveClient} onShowArchivedClients={() => setArchivedClientsOpen(true)} spaces={spaces} activeSpace={activeSpace} onSelectSpace={id => { setActiveSpace(id); setSelectedMilestoneId(null) }} onEditSpace={editSpace} onRemoveSpace={removeSpace} onAddSpace={addSpace} onOpenSecrets={(spaceId) => { setSpaceSecretsId(spaceId); setSpaceSecretsOpen(true) }} boards={boards} activeBoard={activeBoard} onSelectBoard={id => { setActiveBoard(id); setSelectedMilestoneId(null); setActiveView(null) }} onEditBoard={editBoard} onAddBoard={addBoard} onArchiveBoard={archiveBoard} onAddMilestone={addMilestone} onEditMilestone={editMilestone} onArchiveMilestone={archiveMilestone} onSelectMilestone={ms => setSelectedMilestoneId(ms.id === selectedMilestoneId ? null : ms.id)} highlightMilestoneId={selectedMilestoneId} onShowArchivedBoards={() => setArchivedBoardsOpen(true)} onShowArchivedMilestones={() => setArchivedMilestonesOpen(true)} onCollapsedChange={setSidebarCollapsed} />
+    <section className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-24' : 'lg:pl-64'}`}>
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-5 md:px-10">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => {
               const sidebar = document.querySelector('aside')
+              const overlay = document.getElementById('sidebar-overlay')
               if (sidebar) {
-                sidebar.classList.toggle('-translate-x-full')
+                sidebar.classList.remove('-translate-x-full')
+                overlay?.classList.remove('-translate-x-full')
               }
             }}
             className="rounded-sm border border-border bg-background/80 p-2 text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground lg:hidden"
