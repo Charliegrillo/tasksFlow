@@ -9,6 +9,7 @@ __v0_jsx-dev-runtime.ts
 # Environment variables
 .env*.local
 *.sqlite
+*.sql
 
 # Common ignores
 node_modules
