@@ -18,7 +18,7 @@ type Db = {
 const dbMode = process.env.DB_MODE ?? 'local'
 const isRemote = dbMode === 'turso' || dbMode === 'remote'
 const databaseUrl = isRemote
-  ? process.env.TURSO_DATABASE_URL
+  ? (process.env.TURSO_DATABASE_URL as string)
   : 'file:' + path.join(process.cwd(), 'kanban.sqlite')
 if (isRemote && !databaseUrl) throw new Error('TURSO_DATABASE_URL es requerido cuando DB_MODE=turso|remote')
 if (isRemote && !process.env.TURSO_AUTH_TOKEN) throw new Error('TURSO_AUTH_TOKEN es requerido cuando DB_MODE=turso|remote')
