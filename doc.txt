@@ -1,0 +1,1 @@
+node --env-file=.env.local ./utils/import-turso.js

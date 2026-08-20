@@ -4,7 +4,7 @@ import { createSpaceSecret, listSpaceSecrets, updateSpaceSecret, deleteSpaceSecr
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const spaceId = Number(id)
-  return NextResponse.json({ data: listSpaceSecrets(spaceId) })
+  return NextResponse.json({ data: await listSpaceSecrets(spaceId) })
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const value = typeof body.value === 'string' ? body.value : ''
   if (!name || !value) return NextResponse.json({ error: 'Nombre y valor son obligatorios' }, { status: 400 })
 
-  const secret = createSpaceSecret(Number(id), {
+  const secret = await createSpaceSecret(Number(id), {
     name,
     value,
     type: body.type ?? 'other',
@@ -28,7 +28,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const body = await request.json()
   const secretId = Number(body.id)
   if (!secretId) return NextResponse.json({ error: 'id requerido' }, { status: 400 })
-  const secret = updateSpaceSecret(secretId, body)
+  const secret = await updateSpaceSecret(secretId, body)
   return secret ? NextResponse.json({ data: secret }) : NextResponse.json({ error: 'Secreto no encontrado' }, { status: 404 })
 }
 
@@ -37,7 +37,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const url = new URL(request.url)
   const secretId = Number(url.searchParams.get('secretId'))
   if (!secretId) return NextResponse.json({ error: 'secretId requerido' }, { status: 400 })
-  const deleted = deleteSpaceSecret(secretId)
+  const deleted = await deleteSpaceSecret(secretId)
   if (!deleted) return NextResponse.json({ error: 'Secreto no encontrado' }, { status: 404 })
   return new NextResponse(null, { status: 204 })
 }

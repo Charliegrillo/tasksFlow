@@ -4,7 +4,7 @@ import { createAttachment, listAttachments } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   const taskId = Number(request.nextUrl.searchParams.get('taskId'))
-  return NextResponse.json({ data: listAttachments(taskId || undefined) })
+  return NextResponse.json({ data: await listAttachments(taskId || undefined) })
 }
 
 export async function POST(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     if (file.size > 25 * 1024 * 1024) return NextResponse.json({ error: 'El archivo supera el límite de 25 MB' }, { status: 413 })
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
     const blob = await put(`tasks/${taskId}/${crypto.randomUUID()}-${safeName}`, file, { access: 'public', addRandomSuffix: false })
-    return NextResponse.json({ data: { ...createAttachment({ taskId, name: file.name, pathname: blob.url, size: file.size, contentType: file.type || 'application/octet-stream' }), url: blob.url } }, { status: 201 })
+    return NextResponse.json({ data: { ...await createAttachment({ taskId, name: file.name, pathname: blob.url, size: file.size, contentType: file.type || 'application/octet-stream' }), url: blob.url } }, { status: 201 })
   } catch (error) {
     console.error('[v0] attachment upload failed', error)
     const message = error instanceof Error ? error.message : 'No se pudo subir el archivo'

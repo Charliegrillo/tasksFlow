@@ -7,7 +7,7 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ user: null })
   }
-  const user = getUserById(session.userId)
+  const user = await getUserById(session.userId)
   if (!user) {
     return NextResponse.json({ user: null })
   }

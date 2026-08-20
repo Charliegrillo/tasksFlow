@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const attachment = deleteAttachment(Number((await params).id))
+  const attachment = await deleteAttachment(Number((await params).id))
   if (!attachment) return NextResponse.json({ error: 'Adjunto no encontrado' }, { status: 404 })
   await del(attachment.pathname)
   return NextResponse.json({ ok: true })

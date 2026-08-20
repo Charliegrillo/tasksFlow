@@ -5,23 +5,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params
   const input = await req.json()
   if (input.archived === true) {
-    const result = archiveMilestone(Number(id))
+    const result = await archiveMilestone(Number(id))
     if (!result) return NextResponse.json({ error: 'not found' }, { status: 404 })
     return NextResponse.json({ data: result })
   }
   if (input.archived === false) {
-    const result = unarchiveMilestone(Number(id))
+    const result = await unarchiveMilestone(Number(id))
     if (!result) return NextResponse.json({ error: 'not found' }, { status: 404 })
     return NextResponse.json({ data: result })
   }
-  const result = updateMilestone(Number(id), input)
+  const result = await updateMilestone(Number(id), input)
   if (!result) return NextResponse.json({ error: 'not found' }, { status: 404 })
   return NextResponse.json({ data: result })
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const ok = deleteMilestone(Number(id))
+  const ok = await deleteMilestone(Number(id))
   if (!ok) return NextResponse.json({ error: 'not found' }, { status: 404 })
   return NextResponse.json({ ok: true })
 }

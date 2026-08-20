@@ -8,13 +8,13 @@ export async function POST(request: Request) {
     if (!email?.trim()) {
       return NextResponse.json({ error: 'Email es requerido' }, { status: 400 })
     }
-    const user = getUserByEmail(email)
+    const user = await getUserByEmail(email)
     if (!user) {
       return NextResponse.json({ success: true, message: 'Si el email existe, recibirás un enlace de recuperación' })
     }
     const token = crypto.randomBytes(32).toString('hex')
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
-    createPasswordResetToken(user.id, token, expiresAt)
+    await createPasswordResetToken(user.id, token, expiresAt)
     console.log(`\n=== PASSWORD RESET TOKEN ===\nUser: ${user.email}\nToken: ${token}\nExpires: ${expiresAt}\nUse: /reset-password?token=${token}\n============================\n`)
     return NextResponse.json({ success: true, message: 'Si el email existe, recibirás un enlace de recuperación' })
   } catch {

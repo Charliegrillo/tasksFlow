@@ -4,7 +4,7 @@ import { decrypt } from '@/lib/auth'
 
 const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password']
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
   const isApiAuth = pathname.startsWith('/api/auth/')

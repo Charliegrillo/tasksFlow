@@ -11,13 +11,13 @@ export async function POST(request: Request) {
     if (newPassword.length < 6) {
       return NextResponse.json({ error: 'La contraseña debe tener al menos 6 caracteres' }, { status: 400 })
     }
-    const resetToken = getPasswordResetToken(token)
+    const resetToken = await getPasswordResetToken(token)
     if (!resetToken) {
       return NextResponse.json({ error: 'Token inválido o expirado' }, { status: 400 })
     }
     const passwordHash = await bcrypt.hash(newPassword, 10)
-    updateUserPassword(resetToken.userId, passwordHash)
-    deletePasswordResetToken(token)
+    await updateUserPassword(resetToken.userId, passwordHash)
+    await deletePasswordResetToken(token)
     return NextResponse.json({ success: true, message: 'Contraseña actualizada correctamente' })
   } catch {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

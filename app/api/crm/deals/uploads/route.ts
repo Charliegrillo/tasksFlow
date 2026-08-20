@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const blob = await put(`crm/deals/${dealId}/${crypto.randomUUID()}-${safeName}`, file, { access: 'public', addRandomSuffix: false })
 
     return NextResponse.json({
-      data: createCrmDealAttachment({
+      data: await createCrmDealAttachment({
         dealId,
         name: file.name,
         pathname: blob.url,

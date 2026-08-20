@@ -1,0 +1,8 @@
+node_modules
+.next
+public
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+package-lock.json
+pnpm-lock.yaml
