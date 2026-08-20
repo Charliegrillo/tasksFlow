@@ -26,7 +26,7 @@ export const UpdateTaskSchema = CreateTaskSchema.partial()
 export const CreateBoardSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   type: z.string().default('roadmap'),
-  spaceId: z.number({ required_error: 'SpaceId is required' }),
+  spaceId: z.number({ error: 'SpaceId is required' }),
   paymentStatus: BoardPaymentStatusSchema.default('pendiente'),
 })
 
@@ -43,7 +43,7 @@ export const UpdateClientSchema = CreateClientSchema.partial()
 export const CreateSpaceSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   color: z.string().default('bg-violet-500'),
-  clientId: z.number({ required_error: 'ClientId is required' }),
+  clientId: z.number({ error: 'ClientId is required' }),
 })
 
 export const UpdateSpaceSchema = CreateSpaceSchema.partial()
@@ -64,13 +64,13 @@ export const UpdateContactSchema = CreateContactSchema.partial()
 export const CreateMilestoneSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   color: z.string().default('bg-violet-500'),
-  clientId: z.number({ required_error: 'ClientId is required' }),
+  clientId: z.number({ error: 'ClientId is required' }),
 })
 
 export const UpdateMilestoneSchema = CreateMilestoneSchema.partial()
 
 export const CreateBudgetItemSchema = z.object({
-  budgetId: z.number({ required_error: 'BudgetId is required' }),
+  budgetId: z.number({ error: 'BudgetId is required' }),
   type: BudgetItemTypeSchema.default('task'),
   description: z.string().min(1, 'Description is required'),
   amount: z.number().min(0).default(0),
@@ -83,7 +83,7 @@ export const UpdateBudgetItemSchema = z.object({
 })
 
 export const CreateBudgetPaymentSchema = z.object({
-  budgetId: z.number({ required_error: 'BudgetId is required' }),
+  budgetId: z.number({ error: 'BudgetId is required' }),
   amount: z.number().positive('Amount must be positive'),
   description: z.string().default(''),
   date: z.string().optional(),
@@ -110,27 +110,27 @@ export const CreateCrmStageSchema = z.object({
 })
 
 export const CreateCrmDealSchema = z.object({
-  contactId: z.number({ required_error: 'ContactId is required' }),
-  stageId: z.number({ required_error: 'StageId is required' }),
+  contactId: z.number({ error: 'ContactId is required' }),
+  stageId: z.number({ error: 'StageId is required' }),
   budgetAmount: z.number().min(0).default(0),
   notes: z.string().default(''),
 })
 
 export const CreateCrmInteractionSchema = z.object({
-  dealId: z.number({ required_error: 'DealId is required' }),
+  dealId: z.number({ error: 'DealId is required' }),
   type: CrmInteractionTypeSchema,
   description: z.string().default(''),
   date: z.string(),
 })
 
 export const CreateCommentSchema = z.object({
-  taskId: z.number({ required_error: 'TaskId is required' }),
+  taskId: z.number({ error: 'TaskId is required' }),
   author: z.string().default('Usuario'),
   content: z.string().min(1, 'Content is required'),
 })
 
 export const CreateChecklistSchema = z.object({
-  taskId: z.number({ required_error: 'TaskId is required' }),
+  taskId: z.number({ error: 'TaskId is required' }),
   title: z.string().min(1, 'Title is required').max(200),
 })
 
@@ -139,7 +139,7 @@ export const UpdateChecklistSchema = z.object({
 })
 
 export const CreateChecklistItemSchema = z.object({
-  checklistId: z.number({ required_error: 'ChecklistId is required' }),
+  checklistId: z.number({ error: 'ChecklistId is required' }),
   title: z.string().min(1, 'Title is required').max(200),
 })
 

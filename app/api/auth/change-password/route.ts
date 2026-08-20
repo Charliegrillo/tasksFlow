@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { getSession } from '@/lib/auth'
-import { getUserById, getUserByEmail, updateUserPassword } from '@/lib/db'
+import { container } from '@/lib/infrastructure/di/container'
 
 export async function POST(request: Request) {
   try {
@@ -16,11 +16,11 @@ export async function POST(request: Request) {
     if (newPassword.length < 6) {
       return NextResponse.json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' }, { status: 400 })
     }
-    const user = await getUserById(session.userId)
+    const user = await container.authService.getUserById(session.userId)
     if (!user) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
-    const fullUser = await getUserByEmail(user.email)
+    const fullUser = await container.userRepo.findByEmail(user.email)
     if (!fullUser) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
@@ -28,8 +28,7 @@ export async function POST(request: Request) {
     if (!valid) {
       return NextResponse.json({ error: 'La contraseña actual es incorrecta' }, { status: 401 })
     }
-    const passwordHash = await bcrypt.hash(newPassword, 10)
-    await updateUserPassword(session.userId, passwordHash)
+    await container.authService.updatePassword(session.userId, newPassword)
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

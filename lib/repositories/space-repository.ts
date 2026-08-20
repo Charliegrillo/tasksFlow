@@ -5,6 +5,7 @@ import type { CreateSpaceInput, UpdateSpaceInput } from '@/lib/types'
 export interface ISpaceRepository {
   findById(id: number): Promise<Space | null>
   findByClientId(clientId: number): Promise<Space[]>
+  findAll(): Promise<Space[]>
   create(data: CreateSpaceInput): Promise<Space>
   update(id: number, data: UpdateSpaceInput): Promise<Space | null>
   delete(id: number): Promise<boolean>

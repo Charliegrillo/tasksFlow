@@ -10,8 +10,9 @@ export class SpaceService {
     return this.spaceRepo.findById(id)
   }
 
-  async findByClientId(clientId: number): Promise<Space[]> {
-    return this.spaceRepo.findByClientId(clientId)
+  async findByClientId(clientId?: number): Promise<Space[]> {
+    if (clientId) return this.spaceRepo.findByClientId(clientId)
+    return this.spaceRepo.findAll()
   }
 
   async create(data: CreateSpaceInput): Promise<Space> {

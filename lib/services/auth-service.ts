@@ -1,6 +1,7 @@
 import type { IUserRepository } from '@/lib/repositories/user-repository'
 import type { User } from '@/lib/domain/entities/user'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 
 export class AuthService {
   constructor(private userRepo: IUserRepository) {}
@@ -37,10 +38,7 @@ export class AuthService {
   async updatePassword(id: number, newPassword: string): Promise<boolean> {
     if (!newPassword || newPassword.length < 6) throw new Error('Password must be at least 6 characters')
     const passwordHash = await bcrypt.hash(newPassword, 10)
-    // Use the underlying repo's update method - but we need a password-specific method
-    // The UserRepository doesn't have updatePassword, so we'll use create + delete pattern
-    // Actually, let's just use the raw db through the user
-    return true // Placeholder - will be properly implemented
+    return this.userRepo.updatePassword(id, passwordHash)
   }
 
   async createResetToken(email: string): Promise<string | null> {
@@ -65,8 +63,6 @@ export class AuthService {
     if (!newPassword || newPassword.length < 6) throw new Error('Password must be at least 6 characters')
 
     const passwordHash = await bcrypt.hash(newPassword, 10)
-    // Need to update password - the repo doesn't have this method directly
-    // We'll need to add it or use a workaround
-    return true // Placeholder
+    return this.userRepo.updatePassword(userId, passwordHash)
   }
 }

@@ -34,6 +34,10 @@ export class UserRepository implements IUserRepository {
     return (await db.prepare('DELETE FROM users WHERE id=?').run(id)).changes > 0
   }
 
+  async updatePassword(id: number, passwordHash: string): Promise<boolean> {
+    return (await db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(passwordHash, id)).changes > 0
+  }
+
   async createResetToken(userId: number, token: string, expiresAt: Date): Promise<PasswordResetToken> {
     await db.prepare('DELETE FROM password_reset_tokens WHERE user_id=?').run(userId)
     const result = await db.prepare('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)')

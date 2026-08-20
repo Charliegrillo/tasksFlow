@@ -15,6 +15,11 @@ export class TaskRepository implements ITaskRepository {
     return rows.map(mapTask)
   }
 
+  async findAll(): Promise<Task[]> {
+    const rows = await db.prepare('SELECT * FROM tasks ORDER BY id ASC').all()
+    return rows.map(mapTask)
+  }
+
   async findByMilestoneId(milestoneId: number): Promise<Task[]> {
     const rows = await db.prepare('SELECT * FROM tasks WHERE milestone_id=? ORDER BY position ASC, id ASC').all(milestoneId)
     return rows.map(mapTask)
@@ -57,12 +62,16 @@ export class TaskRepository implements ITaskRepository {
     return (await db.prepare('DELETE FROM tasks WHERE id=?').run(id)).changes > 0
   }
 
-  async reorder(id: number, newPosition: number): Promise<void> {
+  async reorder(id: number, newStatus: string, newPosition: number): Promise<void> {
     const task = await db.prepare('SELECT * FROM tasks WHERE id=?').get(id) as { board_id: number; status: string; position: number } | undefined
     if (!task) return
     const oldStatus = task.status
-    await db.prepare('UPDATE tasks SET status=?, position=? WHERE id=?').run(task.status, newPosition, id)
-    await db.prepare('UPDATE tasks SET position=position+1 WHERE board_id=? AND status=? AND position>=? AND id!=?').run(task.board_id, task.status, newPosition, id)
+    await db.prepare('UPDATE tasks SET status=?, position=? WHERE id=?').run(newStatus, newPosition, id)
+    if (oldStatus !== newStatus) {
+      await db.prepare('UPDATE tasks SET position=position+1 WHERE board_id=? AND status=? AND position>=? AND id!=?').run(task.board_id, oldStatus, newPosition, id)
+    } else {
+      await db.prepare('UPDATE tasks SET position=position+1 WHERE board_id=? AND status=? AND position>=? AND id!=?').run(task.board_id, newStatus, newPosition, id)
+    }
   }
 
   async bulkUpdate(tasks: { id: number; position: number; status: string }[]): Promise<void> {

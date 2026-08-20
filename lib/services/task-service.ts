@@ -17,6 +17,10 @@ export class TaskService {
     return this.taskRepo.findByBoardId(boardId)
   }
 
+  async findAll(): Promise<Task[]> {
+    return this.taskRepo.findAll()
+  }
+
   async findById(id: number): Promise<Task | null> {
     return this.taskRepo.findById(id)
   }
@@ -35,7 +39,7 @@ export class TaskService {
   }
 
   async move(taskId: number, newStatus: string, newPosition: number): Promise<void> {
-    await this.taskRepo.reorder(taskId, newPosition)
+    await this.taskRepo.reorder(taskId, newStatus, newPosition)
   }
 
   async bulkMove(tasks: { id: number; position: number; status: string }[]): Promise<void> {

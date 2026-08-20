@@ -5,6 +5,7 @@ export interface IUserRepository {
   findByEmail(email: string): Promise<(User & { passwordHash: string }) | null>
   create(data: { name: string; email: string; passwordHash: string }): Promise<User>
   update(id: number, data: { name?: string; email?: string }): Promise<User | null>
+  updatePassword(id: number, passwordHash: string): Promise<boolean>
   delete(id: number): Promise<boolean>
 
   // Password Reset

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import { createUser, getUserByEmail } from '@/lib/db'
+import { container } from '@/lib/infrastructure/di/container'
 import { createSession } from '@/lib/auth'
 
 export async function POST(request: Request) {
@@ -12,15 +11,14 @@ export async function POST(request: Request) {
     if (password.length < 6) {
       return NextResponse.json({ error: 'La contraseña debe tener al menos 6 caracteres' }, { status: 400 })
     }
-    const existing = await getUserByEmail(email)
-    if (existing) {
-      return NextResponse.json({ error: 'Ya existe una cuenta con este email' }, { status: 409 })
-    }
-    const passwordHash = await bcrypt.hash(password, 10)
-    const user = await createUser(name, email, passwordHash)
+    const user = await container.authService.register(name, email, password)
     await createSession(user.id)
     return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email } }, { status: 201 })
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error interno del servidor'
+    if (message.includes('Ya existe')) {
+      return NextResponse.json({ error: message }, { status: 409 })
+    }
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

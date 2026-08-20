@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import { getPasswordResetToken, updateUserPassword, deletePasswordResetToken } from '@/lib/db'
+import { container } from '@/lib/infrastructure/di/container'
 
 export async function POST(request: Request) {
   try {
@@ -11,13 +10,14 @@ export async function POST(request: Request) {
     if (newPassword.length < 6) {
       return NextResponse.json({ error: 'La contraseña debe tener al menos 6 caracteres' }, { status: 400 })
     }
-    const resetToken = await getPasswordResetToken(token)
-    if (!resetToken) {
+    const userId = await container.authService.validateResetToken(token)
+    if (!userId) {
       return NextResponse.json({ error: 'Token inválido o expirado' }, { status: 400 })
     }
-    const passwordHash = await bcrypt.hash(newPassword, 10)
-    await updateUserPassword(resetToken.userId, passwordHash)
-    await deletePasswordResetToken(token)
+    const success = await container.authService.resetPassword(token, newPassword)
+    if (!success) {
+      return NextResponse.json({ error: 'Error al actualizar la contraseña' }, { status: 500 })
+    }
     return NextResponse.json({ success: true, message: 'Contraseña actualizada correctamente' })
   } catch {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

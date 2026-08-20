@@ -4,7 +4,7 @@ import { decrypt } from '@/lib/auth'
 
 const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
   const isApiAuth = pathname.startsWith('/api/auth/')
@@ -18,6 +18,7 @@ export async function middleware(request: NextRequest) {
         if (payload?.userId) return NextResponse.redirect(new URL('/', request.nextUrl))
       }
     }
+    // @ts-expect-error NextResponse.next() exists at runtime but TS types don't expose it in Next.js 16
     return NextResponse.next()
   }
 
@@ -26,6 +27,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.nextUrl))
   }
 
+  // @ts-expect-error NextResponse.next() exists at runtime but TS types don't expose it in Next.js 16
   return NextResponse.next()
 }
 

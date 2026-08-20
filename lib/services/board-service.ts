@@ -49,6 +49,10 @@ export class BoardService {
     return this.boardRepo.findLists(boardId)
   }
 
+  async findListById(id: number): Promise<BoardList | null> {
+    return this.boardRepo.findListById(id)
+  }
+
   async createList(boardId: number, name: string, color: string): Promise<BoardList> {
     return this.boardRepo.createList(boardId, name, color)
   }

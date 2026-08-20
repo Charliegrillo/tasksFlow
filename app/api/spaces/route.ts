@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createSpace, listSpaces } from '@/lib/db'
+import { container } from '@/lib/infrastructure/di/container'
 
 export async function GET(request: Request) {
   const clientId = Number(new URL(request.url).searchParams.get('clientId'))
-  return NextResponse.json({ data: await listSpaces(clientId || undefined) })
+  return NextResponse.json({ data: await container.spaceService.findByClientId(clientId || undefined) })
 }
 
 export async function POST(request: Request) {
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   if (!name) return NextResponse.json({ error: 'El nombre es obligatorio' }, { status: 400 })
   if (name.length > 60) return NextResponse.json({ error: 'El nombre es demasiado largo' }, { status: 400 })
   try {
-    return NextResponse.json({ data: await createSpace(name, body.color, Number(body.clientId) || undefined, body.secretPassword ?? null) }, { status: 201 })
+    return NextResponse.json({ data: await container.spaceService.create({ name, color: body.color, clientId: Number(body.clientId) || undefined }) }, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Ya existe un espacio con ese nombre' }, { status: 409 })
   }

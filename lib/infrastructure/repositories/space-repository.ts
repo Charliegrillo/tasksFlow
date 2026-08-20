@@ -15,6 +15,10 @@ export class SpaceRepository implements ISpaceRepository {
     return (await db.prepare('SELECT * FROM spaces WHERE client_id=? ORDER BY id ASC').all(clientId)).map(mapSpace)
   }
 
+  async findAll(): Promise<Space[]> {
+    return (await db.prepare('SELECT * FROM spaces ORDER BY id ASC').all()).map(mapSpace)
+  }
+
   async create(data: CreateSpaceInput): Promise<Space> {
     const result = await db.prepare('INSERT INTO spaces (name, color, client_id) VALUES (?, ?, ?)')
       .run(data.name.trim(), data.color ?? 'bg-violet-500', data.clientId)

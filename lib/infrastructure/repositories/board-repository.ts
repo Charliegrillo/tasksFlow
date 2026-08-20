@@ -73,6 +73,11 @@ export class BoardRepository implements IBoardRepository {
     return (await db.prepare('SELECT * FROM board_lists WHERE board_id=? ORDER BY position, id').all(boardId)).map(mapBoardList)
   }
 
+  async findListById(id: number): Promise<BoardList | null> {
+    const row = await db.prepare('SELECT * FROM board_lists WHERE id=?').get(id)
+    return row ? mapBoardList(row) : null
+  }
+
   async createList(boardId: number, name: string, color: string): Promise<BoardList> {
     const position = (await db.prepare('SELECT COALESCE(MAX(position), -1) + 1 as position FROM board_lists WHERE board_id=?').get(boardId) as { position: number }).position
     const result = await db.prepare('INSERT INTO board_lists (board_id, name, color, position) VALUES (?, ?, ?, ?)').run(boardId, name.trim(), color, position)

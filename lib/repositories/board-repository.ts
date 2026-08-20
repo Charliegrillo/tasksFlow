@@ -15,6 +15,7 @@ export interface IBoardRepository {
 
   // Board Lists
   findLists(boardId: number): Promise<BoardList[]>
+  findListById(id: number): Promise<BoardList | null>
   createList(boardId: number, name: string, color: string): Promise<BoardList>
   updateList(id: number, data: { name?: string; color?: string }): Promise<BoardList | null>
   deleteList(id: number): Promise<boolean>

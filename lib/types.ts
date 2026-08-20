@@ -37,7 +37,7 @@ export type UpdateBoardInput = Partial<CreateBoardInput>
 export type CreateClientInput = { name: string; email?: string; company?: string }
 export type UpdateClientInput = Partial<CreateClientInput>
 
-export type CreateSpaceInput = { name: string; color?: string; clientId: number }
+export type CreateSpaceInput = { name: string; color?: string; clientId?: number }
 export type UpdateSpaceInput = Partial<CreateSpaceInput>
 
 export type CreateContactInput = { name: string; email?: string; phone?: string; company?: string; position?: string; address?: string; website?: string; notes?: string }
