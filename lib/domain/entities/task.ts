@@ -12,13 +12,14 @@ export class Task {
     public boardId?: number,
     public position: number = 0,
     public milestoneId: number | null = null,
-    public startDate: Date | null = null,
-    public dueDate: Date | null = null,
+    public startDate: string | null = null,
+    public dueDate: string | null = null,
     public labels: string[] = []
   ) {}
 
   get isOverdue(): boolean {
-    return this.dueDate ? this.dueDate < new Date() && this.status !== 'done' : false
+    if (!this.dueDate || this.status === 'done') return false
+    return new Date(this.dueDate) < new Date()
   }
 
   get isDone(): boolean {
