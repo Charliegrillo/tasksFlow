@@ -16,11 +16,12 @@ type Db = {
 }
 
 const dbMode = process.env.DB_MODE ?? 'local'
-const databaseUrl = dbMode === 'turso'
+const isRemote = dbMode === 'turso' || dbMode === 'remote'
+const databaseUrl = isRemote
   ? process.env.TURSO_DATABASE_URL
   : 'file:' + path.join(process.cwd(), 'kanban.sqlite')
-if (!databaseUrl) throw new Error('TURSO_DATABASE_URL es requerido cuando DB_MODE=turso')
-if (dbMode === 'turso' && !process.env.TURSO_AUTH_TOKEN) throw new Error('TURSO_AUTH_TOKEN es requerido cuando DB_MODE=turso')
+if (isRemote && !databaseUrl) throw new Error('TURSO_DATABASE_URL es requerido cuando DB_MODE=turso|remote')
+if (isRemote && !process.env.TURSO_AUTH_TOKEN) throw new Error('TURSO_AUTH_TOKEN es requerido cuando DB_MODE=turso|remote')
 
 const globalForDb = globalThis as unknown as { libsql?: LibsqlClient }
 const client = globalForDb.libsql ?? createLibsqlClient({ url: databaseUrl, authToken: process.env.TURSO_AUTH_TOKEN })
