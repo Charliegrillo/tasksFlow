@@ -22,6 +22,10 @@ import { ContactDialog } from '@/components/contact-dialog'
 import { ContactPanel } from '@/components/contact-panel'
 import { CrmBoard } from '@/components/crm-board'
 import { SpaceSecretsPanel } from '@/components/space-secrets-panel'
+import { TaskDetailModal } from '@/components/features/task/task-detail-modal'
+import { BoardColumn } from '@/components/features/board/board-column'
+import { NewListDialog } from '@/components/features/board/new-list-dialog'
+import { ListMoveDialog } from '@/components/features/board/list-move-dialog'
 
 type Column = { id: TaskStatus; title: string; color: string; dbId?: number }
 const fallbackColumns: Column[] = [
@@ -461,114 +465,32 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
       )}
     </section>
     {selected && (
-        <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-background/70 p-0 sm:p-4" role="presentation" onClick={() => setSelected(null)}>
-          <div onClick={e => e.stopPropagation()} className="flex h-[85vh] sm:h-[90vh] w-full sm:max-w-4xl flex-col rounded-t-2xl sm:rounded-sm border border-border bg-card shadow-xl overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border px-4 sm:px-6 py-3 sm:py-4">
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground">Detalle de tarea</p>
-                <h2 className="mt-0.5 text-base sm:text-lg font-semibold truncate">{selected.title}</h2>
-              </div>
-              <button onClick={() => setSelected(null)} className="shrink-0 rounded-sm p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar"><X className="size-4" /></button>
-            </div>
-            <div className="flex min-h-0 flex-1 flex-col sm:flex-row overflow-hidden">
-              <div className="flex flex-1 flex-col overflow-hidden">
-                <div className="flex gap-1 border-b border-border px-4 sm:px-6 pt-3 overflow-x-auto">
-                  {[{ id: 'details' as const, label: 'Detalles' }, { id: 'checklists' as const, label: 'Checklists' }, { id: 'attachments' as const, label: 'Adjuntos' }].map(tab => <button key={tab.id} onClick={() => { setDetailTab(tab.id); setShowComments(false) }} className={`rounded-t-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${!showComments && detailTab === tab.id ? 'border-b-2 border-primary text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{tab.label}</button>)}
-                  <button onClick={() => setShowComments(v => !v)} className={`ml-auto flex items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs sm:text-sm font-medium transition-colors sm:hidden whitespace-nowrap ${showComments ? 'border-b-2 border-primary text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-                    <span className="text-[10px] sm:text-xs">Comentarios</span>
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5">
-                  {detailTab === 'details' && <>
-                    <div><h3 className="mb-2 text-sm font-semibold">Descripción</h3><textarea value={selected.description} onChange={e => void updateTaskDescription(selected.id, e.target.value)} placeholder="Sin descripción todavía..." className="min-h-[80px] w-full resize-none rounded-sm border border-border bg-background px-3 py-2 text-sm leading-6 outline-none focus:border-primary" /></div>
-                    <section className="mt-5 border-t border-border pt-5">
-                      <h3 className="mb-3 text-sm font-semibold">Hito</h3>
-                      <select value={selected.milestoneId ?? ''} onChange={e => { const val = e.target.value ? Number(e.target.value) : null; void updateMilestoneOnTask(selected.id, val) }} className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary">
-                        <option value="">Sin hito</option>
-                        {milestones.map(ms => <option key={ms.id} value={ms.id}>{ms.name}</option>)}
-                      </select>
-                    </section>
-                    <section className="mt-5 border-t border-border pt-5">
-                      <h3 className="mb-3 text-sm font-semibold">Fechas</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1"><label className="text-xs text-muted-foreground">Inicio</label><input type="date" value={selected.startDate ?? ''} onChange={e => updateTaskDates(selected.id, 'startDate', e.target.value || null)} className="rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" /></div>
-                        <div className="flex flex-col gap-1"><label className="text-xs text-muted-foreground">Vencimiento</label><input type="date" value={selected.dueDate ?? ''} onChange={e => updateTaskDates(selected.id, 'dueDate', e.target.value || null)} className="rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" /></div>
-                      </div>
-                    </section>
-                  </>}
-                  {detailTab === 'checklists' && <ChecklistSection taskId={selected.id} />}
-                  {detailTab === 'attachments' && <section>
-                    <div className="flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-semibold"><Paperclip className="size-4" /> Adjuntos</h3><label className="cursor-pointer rounded-sm border border-border px-3 py-1.5 text-sm font-medium hover:bg-secondary"><span>{isUploading ? 'Subiendo...' : 'Añadir'}</span><input type="file" multiple className="sr-only" disabled={isUploading} onChange={e => { if (e.target.files) void uploadFiles(e.target.files); e.currentTarget.value = '' }} /></label></div>
-                    <p className="mt-4 text-xs font-semibold text-muted-foreground">Archivos ({attachments.length})</p>
-                    {uploadError && <p role="alert" className="mt-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{uploadError}</p>}
-                    <div className="mt-2 flex flex-col gap-2" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); void uploadFiles(e.dataTransfer.files) }}>
-                      {attachments.length ? attachments.filter(attachment => Boolean(attachment && attachment.name)).map(attachment => <div key={attachment.id} className="flex items-center gap-3 rounded-sm border border-border px-3 py-2.5"><div className="grid size-10 shrink-0 place-items-center rounded-md bg-secondary text-xs font-bold uppercase">{attachment.name.split('.').pop() || 'FILE'}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{attachment.name}</p><p className="text-xs text-muted-foreground">Añadido: {new Date(attachment.createdAt).toLocaleString('es-ES')} · {(attachment.size / 1024).toFixed(0)} KB</p></div><a href={attachment.pathname} target="_blank" rel="noreferrer" className="rounded p-2 text-muted-foreground hover:bg-secondary"><ExternalLink className="size-4" /></a><button onClick={() => void removeAttachment(attachment)} className="rounded p-2 text-muted-foreground hover:text-destructive"><Trash2 className="size-4" /></button></div>) : <div className="rounded-sm border border-dashed border-border px-4 py-6 text-center text-xs text-muted-foreground">Arrastra archivos aquí o usa «Añadir»</div>}
-                    </div>
-                  </section>}
-                </div>
-                <div className="flex items-center justify-between border-t border-border px-4 sm:px-6 py-3">
-                  <button onClick={() => remove(selected.id)} className="flex items-center gap-2 text-sm text-destructive hover:underline"><Trash2 className="size-4" /> Eliminar</button>
-                  <button onClick={() => setSelected(null)} className="rounded-sm bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Listo</button>
-                </div>
-              </div>
-              <div className={`${showComments ? 'flex flex-col h-[50vh] sm:h-auto' : 'hidden'} sm:flex sm:w-[340px] sm:shrink-0 sm:flex-col overflow-hidden sm:border-l sm:border-border transition-all duration-300`}>
-                <CommentsSection taskId={selected.id} />
-              </div>
-            </div>
-          </div>
-        </div>
+      <TaskDetailModal
+        task={selected}
+        milestones={milestones}
+        attachments={attachments}
+        isUploading={isUploading}
+        uploadError={uploadError}
+        detailTab={detailTab}
+        showComments={showComments}
+        onClose={() => setSelected(null)}
+        onSetDetailTab={(tab: 'details' | 'checklists' | 'attachments') => { setDetailTab(tab); setShowComments(false) }}
+        onSetShowComments={setShowComments}
+        onUpdateDescription={updateTaskDescription}
+        onUpdateMilestone={updateMilestoneOnTask}
+        onUpdateDates={updateTaskDates}
+        onDelete={remove}
+        onUploadFiles={(files: FileList | File[]) => void uploadFiles(files)}
+        onRemoveAttachment={(a: Attachment) => void removeAttachment(a)}
+      />
     )}
     </main>
     <ClientDialog open={clientDialog.open} onClose={() => setClientDialog(v => ({ ...v, open: false }))} onSave={handleClientSave} initialData={clientDialog.data ? { name: clientDialog.data.name, email: clientDialog.data.email, company: clientDialog.data.company } : undefined} title={clientDialog.mode === 'add' ? 'Nuevo cliente' : 'Editar cliente'} />
     <SpaceDialog open={spaceDialog.open} onClose={() => setSpaceDialog(v => ({ ...v, open: false }))} onSave={handleSpaceSave} initialData={spaceDialog.data ? { name: spaceDialog.data.name, color: spaceDialog.data.color, secretPassword: spaceDialog.data.secretPassword ?? null } : undefined} title={spaceDialog.mode === 'add' ? 'Nuevo espacio' : 'Editar espacio'} />
     <BoardDialog open={boardDialog.open} onClose={() => setBoardDialog(v => ({ ...v, open: false }))} onSave={handleBoardSave} initialData={boardDialog.data ? { name: boardDialog.data.name, type: boardDialog.data.type, paymentStatus: boardDialog.data.paymentStatus } : undefined} title={boardDialog.mode === 'add' ? 'Nuevo tablero' : 'Editar tablero'} />
     <MilestoneDialog open={milestoneDialog.open} onClose={() => setMilestoneDialog(v => ({ ...v, open: false }))} onSave={handleMilestoneSave} initialData={milestoneDialog.data ? { name: milestoneDialog.data.name, color: milestoneDialog.data.color } : undefined} title={milestoneDialog.mode === 'add' ? 'Nuevo hito' : 'Editar hito'} />
-    {newListDialog.open && (
-      <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-3 sm:p-4" role="presentation" onClick={() => setNewListDialog({ open: false, name: '' })}>
-        <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-sm border border-border bg-card p-4 shadow-xl sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Nueva lista</p>
-            </div>
-            <button onClick={() => setNewListDialog({ open: false, name: '' })} className="rounded-sm p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar nueva lista"><X className="size-4" /></button>
-          </div>
-          <div className="mt-4 space-y-3">
-            <label className="block text-sm font-medium text-foreground">Nombre</label>
-            <input value={newListDialog.name} onChange={e => setNewListDialog(v => ({ ...v, name: e.target.value }))} className="w-full rounded-sm border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary" placeholder="Ej. En revisión" autoFocus onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void submitBoardList() } }} />
-          </div>
-          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button onClick={() => setNewListDialog({ open: false, name: '' })} className="rounded-sm border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">Cancelar</button>
-            <button onClick={() => void submitBoardList()} className="rounded-sm bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" disabled={!newListDialog.name.trim()}>Crear lista</button>
-          </div>
-        </div>
-      </div>
-    )}
-    {listMoveDialog.open && listMoveDialog.listId && (
-      <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-3 sm:p-4" role="presentation" onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })}>
-        <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-sm border border-border bg-card p-4 shadow-xl sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Reordenar</p>
-              <h3 className="mt-1 text-lg font-semibold">Mover lista</h3>
-            </div>
-            <button onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })} className="rounded-sm p-2 text-muted-foreground hover:bg-secondary" aria-label="Cerrar mover lista"><X className="size-4" /></button>
-          </div>
-          <p className="mt-3 text-sm text-muted-foreground">Elige la posición exacta para esta lista dentro del tablero.</p>
-          <div className="mt-4 space-y-3">
-            <label className="block text-sm font-medium text-foreground">Posición</label>
-            <select value={Math.min(Math.max(listMoveDialog.position, 1), boardLists.length)} onChange={e => setListMoveDialog(v => ({ ...v, position: Number(e.target.value) }))} className="w-full rounded-sm border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary">
-              {boardLists.map((list, index) => (
-                <option key={list.id} value={index + 1}>{`#${index + 1} · ${list.name}`}</option>
-              ))}
-            </select>
-          </div>
-          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button onClick={() => setListMoveDialog({ open: false, listId: null, position: 1 })} className="rounded-sm border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">Cancelar</button>
-            <button onClick={() => { if (listMoveDialog.listId) void moveBoardListByModal(listMoveDialog.listId, Math.max(0, listMoveDialog.position - 1)) }} className="rounded-sm bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Mover lista</button>
-          </div>
-        </div>
-      </div>
-    )}
+    <NewListDialog open={newListDialog.open} name={newListDialog.name} onSetName={(name) => setNewListDialog(v => ({ ...v, name }))} onClose={() => setNewListDialog({ open: false, name: '' })} onSubmit={() => void submitBoardList()} />
+    <ListMoveDialog open={listMoveDialog.open} listId={listMoveDialog.listId} position={listMoveDialog.position} boardLists={boardLists} onSetPosition={(pos) => setListMoveDialog(v => ({ ...v, position: pos }))} onClose={() => setListMoveDialog({ open: false, listId: null, position: 1 })} onMove={(listId, pos) => void moveBoardListByModal(listId, pos)} />
     {budgetOpen && activeBoard && <BudgetPanel key={activeBoard} boardId={activeBoard} onClose={() => setBudgetOpen(false)} />}
     {spaceSecretsOpen && spaceSecretsId && <SpaceSecretsPanel spaceId={spaceSecretsId} onClose={() => { setSpaceSecretsOpen(false); setSpaceSecretsId(null) }} />}
     <ArchivedBoardsModal open={archivedBoardsOpen} spaceId={activeSpace} onClose={() => setArchivedBoardsOpen(false)} onRestore={restoreBoard} onDelete={removeBoard} />
