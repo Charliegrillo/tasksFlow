@@ -1,5 +1,3 @@
-'use client'
-
 export function BoardSkeleton() {
   return (
     <div className="flex items-start gap-5 overflow-x-auto pb-4 min-h-screen px-5 py-6 md:px-10">

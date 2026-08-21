@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ExternalLink, LayoutGrid, List, MoreHorizontal, Paperclip, Plus, Search, SlidersHorizontal, Trash2, X, DollarSign, Archive, GripVertical, MoveHorizontal, PanelLeftOpen } from 'lucide-react'
 import type { Attachment, Board, BoardList, Client, Contact, CrmDeal, CrmInteraction, CrmStage, Milestone, Space, Task, TaskPriority, TaskStatus } from '@/lib/db'
+
 import { ClientDialog } from '@/components/client-dialog'
 import { SpaceDialog } from '@/components/space-dialog'
 import { BoardDialog } from '@/components/board-dialog'
@@ -36,11 +37,27 @@ const fallbackColumns: Column[] = [
 ]
 const priorityLabels: Record<TaskPriority, string> = { low: 'Baja', medium: 'Media', high: 'Alta' }
 
-export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<string> }) {
+export default function KanbanBoard({
+  milestoneId,
+  initialTasks = [],
+  initialClients = [],
+  initialContacts = [],
+  initialCrmStages = [],
+  initialCrmDeals = [],
+  initialMilestones = [],
+}: {
+  milestoneId?: Promise<string>
+  initialTasks?: Task[]
+  initialClients?: Client[]
+  initialContacts?: Contact[]
+  initialCrmStages?: CrmStage[]
+  initialCrmDeals?: CrmDeal[]
+  initialMilestones?: Milestone[]
+}) {
   const router = useRouter()
   const [resolvedMilestoneId, setResolvedMilestoneId] = useState<number | null>(null)
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [clients, setClients] = useState<Client[]>([])
+  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [clients, setClients] = useState<Client[]>(initialClients)
   const [activeClient, setActiveClient] = useState<number | null>(null)
   const [spaces, setSpaces] = useState<Space[]>([])
   const [activeSpace, setActiveSpace] = useState<number | null>(null)
@@ -73,7 +90,7 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
   const [clientDialog, setClientDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Client }>({ open: false, mode: 'add' })
   const [spaceDialog, setSpaceDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Space }>({ open: false, mode: 'add' })
   const [boardDialog, setBoardDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Board }>({ open: false, mode: 'add' })
-  const [milestones, setMilestones] = useState<Milestone[]>([])
+  const [milestones, setMilestones] = useState<Milestone[]>(initialMilestones)
   const [milestoneDialog, setMilestoneDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; data?: Milestone }>({ open: false, mode: 'add' })
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; message: string; confirmLabel?: string; variant?: 'destructive' | 'warning'; onConfirm: () => void }>({ open: false, title: '', message: '', onConfirm: () => {} })
   const [allBoards, setAllBoards] = useState<Board[]>([])
@@ -81,9 +98,9 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
   const [detailTab, setDetailTab] = useState<'details' | 'checklists' | 'attachments'>('details')
   const [archiveOpen, setArchiveOpen] = useState(false)
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | null>(null)
-  const [contacts, setContacts] = useState<Contact[]>([])
-  const [crmStages, setCrmStages] = useState<CrmStage[]>([])
-  const [crmDeals, setCrmDeals] = useState<CrmDeal[]>([])
+  const [contacts, setContacts] = useState<Contact[]>(initialContacts)
+  const [crmStages, setCrmStages] = useState<CrmStage[]>(initialCrmStages)
+  const [crmDeals, setCrmDeals] = useState<CrmDeal[]>(initialCrmDeals)
   const [crmInteractions, setCrmInteractions] = useState<Record<number, CrmInteraction[]>>({})
   const [activeView, setActiveView] = useState<'board' | 'crm' | 'contacts' | 'pipelines' | 'invoices' | null>(null)
   const [spaceSecretsOpen, setSpaceSecretsOpen] = useState(false)
@@ -96,15 +113,22 @@ export default function KanbanBoard({ milestoneId }: { milestoneId?: Promise<str
   const [showComments, setShowComments] = useState(false)
   const columns: Column[] = boardLists.length ? boardLists.map(list => ({ id: ({ Backlog: 'backlog', 'En progreso': 'progress', 'En revisión': 'review', Completado: 'done' } as Record<string, string>)[list.name] ?? `list-${list.id}`, dbId: list.id, title: list.name, color: list.color })) : fallbackColumns
 
-  useEffect(() => { Promise.all([fetch('/api/tasks').then(r => r.json()), fetch('/api/clients').then(r => r.json())]).then(([taskResult, clientResult]) => { const nextClients = clientResult.data ?? []; setTasks(taskResult.data ?? []); setClients(nextClients); setActiveClient(nextClients[0]?.id ?? null) }).finally(() => setLoading(false)) }, [])
-  useEffect(() => { if (!activeClient) return; fetch(`/api/spaces?clientId=${activeClient}`).then(r => r.json()).then(result => { setSpaces(result.data ?? []); setActiveSpace(result.data?.[0]?.id ?? null); if (!result.data?.length) { setBoards([]); setActiveBoard(null); setBoardLists([]) } const spaceIds = (result.data ?? []).map((s: Space) => s.id); return Promise.all(spaceIds.map((sid: number) => fetch(`/api/boards?spaceId=${sid}`).then(r => r.json()))) }).then(results => { const all = results.flatMap((r: { data?: Board[] }) => r.data ?? []); setAllBoards(all) }); fetch(`/api/milestones?clientId=${activeClient}`).then(r => r.json()).then(result => setMilestones(result.data ?? [])) }, [activeClient])
+  useEffect(() => {
+    if (initialTasks.length && initialClients.length) {
+      setActiveClient(initialClients[0]?.id ?? null)
+      setLoading(false)
+      return
+    }
+    Promise.all([fetch('/api/tasks').then(r => r.json()), fetch('/api/clients').then(r => r.json())]).then(([taskResult, clientResult]) => { const nextClients = clientResult.data ?? []; setTasks(taskResult.data ?? []); setClients(nextClients); setActiveClient(nextClients[0]?.id ?? null) }).finally(() => setLoading(false))
+  }, [])
+  useEffect(() => { if (!activeClient) return; fetch(`/api/spaces?clientId=${activeClient}`).then(r => r.json()).then(result => { setSpaces(result.data ?? []); setActiveSpace(result.data?.[0]?.id ?? null); if (!result.data?.length) { setBoards([]); setActiveBoard(null); setBoardLists([]) } const spaceIds = (result.data ?? []).map((s: Space) => s.id); return Promise.all(spaceIds.map((sid: number) => fetch(`/api/boards?spaceId=${sid}`).then(r => r.json()))) }).then(results => { const all = results.flatMap((r: { data?: Board[] }) => r.data ?? []); setAllBoards(all) }); if (!initialMilestones.length) fetch(`/api/milestones?clientId=${activeClient}`).then(r => r.json()).then(result => setMilestones(result.data ?? [])) }, [activeClient])
   useEffect(() => { if (!activeSpace) return; fetch(`/api/boards?spaceId=${activeSpace}`).then(r => r.json()).then(result => { setBoards(result.data ?? []); if (!selectedMilestoneId) setActiveBoard(result.data?.[0]?.id ?? null); if (!result.data?.length) { setBoardLists([]) } }) }, [activeSpace, selectedMilestoneId])
   useEffect(() => { if (!activeBoard || selectedMilestoneId) { if (selectedMilestoneId && allBoards.length) { Promise.all(allBoards.map(b => fetch(`/api/lists?boardId=${b.id}`).then(r => r.json()))).then(results => { const all = results.flatMap((r: { data?: BoardList[] }) => r.data ?? []); const seen = new Set<string>(); const unique = all.filter(l => { const key = l.name; if (seen.has(key)) return false; seen.add(key); return true }); setBoardLists(unique) }) } else { setBoardLists([]) } return } fetch(`/api/lists?boardId=${activeBoard}`).then(r => r.json()).then(result => setBoardLists(result.data ?? [])) }, [activeBoard, selectedMilestoneId, allBoards])
   useEffect(() => { fetch('/api/attachments').then(r => r.json()).then(result => { const counts: Record<number, number> = {}; for (const attachment of (result.data ?? []) as Attachment[]) counts[attachment.taskId] = (counts[attachment.taskId] ?? 0) + 1; setAttachmentCounts(counts) }) }, [tasks.length])
   useEffect(() => { if (milestoneId) { milestoneId.then(id => setResolvedMilestoneId(Number(id))) } }, [milestoneId])
-  useEffect(() => { fetch('/api/contacts').then(r => r.json()).then(result => setContacts(result.data ?? [])) }, [])
-  useEffect(() => { fetch('/api/crm/stages').then(r => r.json()).then(result => setCrmStages(result.data ?? [])) }, [])
-  useEffect(() => { fetch('/api/crm/deals').then(r => r.json()).then(result => setCrmDeals(result.data ?? [])) }, [])
+  useEffect(() => { if (!initialContacts.length) fetch('/api/contacts').then(r => r.json()).then(result => setContacts(result.data ?? [])) }, [])
+  useEffect(() => { if (!initialCrmStages.length) fetch('/api/crm/stages').then(r => r.json()).then(result => setCrmStages(result.data ?? [])) }, [])
+  useEffect(() => { if (!initialCrmDeals.length) fetch('/api/crm/deals').then(r => r.json()).then(result => setCrmDeals(result.data ?? [])) }, [])
   useEffect(() => {
     if (selectedMilestoneId) {
       setFilterMilestone(selectedMilestoneId)
